@@ -8,6 +8,14 @@ import { CAPTURE_KEY, QUESTIONNAIRE_KEY, RESULT_KEY, countConsecutiveDeclines, g
 
 const stages = ["Checking image quality", "Measuring visible density", "Comparing with your baseline", "Reviewing your progress trend", "Evaluating safety signals", "Preparing your coach summary"];
 
+function getNextMockDensityRatio(baselineRatio: number, historyCount: number) {
+  if (historyCount === 0) return baselineRatio;
+
+  const steadyTrend = Math.min(0.18, historyCount * 0.018);
+  const naturalVariation = Math.sin(historyCount * 1.7) * 0.006;
+  return Number((baselineRatio * (1 + steadyTrend + naturalVariation)).toFixed(3));
+}
+
 export default function AnalyzingPage() {
   const [active, setActive] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -22,7 +30,7 @@ export default function AnalyzingPage() {
         const points = records.map(toProgressPoint);
         const baseline = records[0]?.analysis.rawDensityRatio ?? 0.498;
         const latest = records.at(-1)?.analysis;
-        const rawDensityRatio = records.length === 0 ? baseline : 0.498;
+        const rawDensityRatio = getNextMockDensityRatio(baseline, records.length);
         const response = await fetch("/api/check-ins/crownscore/analyze", {
           method: "POST",
           headers: { "Content-Type": "application/json" },

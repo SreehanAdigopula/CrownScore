@@ -9,15 +9,15 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground shadow-[5px_5px_10px_rgb(163,177,198,0.6),-5px_-5px_10px_rgba(255,255,255,0.5)] hover:-translate-y-0.5 hover:bg-[#7a72ff] hover:shadow-[8px_8px_14px_rgb(163,177,198,0.65),-8px_-8px_14px_rgba(255,255,255,0.55)] active:shadow-[inset_3px_3px_6px_rgb(54,50,150,0.35),inset_-3px_-3px_6px_rgba(255,255,255,0.2)]",
+        default: "gradient-primary shadow-[0_14px_34px_rgb(0,82,255,0.24)] hover:-translate-y-0.5 hover:shadow-[0_20px_46px_rgb(0,82,255,0.3)] active:shadow-[0_8px_22px_rgb(0,82,255,0.22)]",
         outline:
-          "bg-background text-foreground shadow-[5px_5px_10px_rgb(163,177,198,0.6),-5px_-5px_10px_rgba(255,255,255,0.5)] hover:-translate-y-0.5 hover:shadow-[8px_8px_14px_rgb(163,177,198,0.65),-8px_-8px_14px_rgba(255,255,255,0.55)] active:shadow-[inset_3px_3px_6px_rgb(163,177,198,0.6),inset_-3px_-3px_6px_rgba(255,255,255,0.5)]",
+          "border-border bg-card text-foreground shadow-[0_12px_28px_rgb(15,23,42,0.06)] hover:-translate-y-0.5 hover:border-primary/40 hover:text-primary",
         secondary:
-          "bg-secondary text-secondary-foreground shadow-[5px_5px_10px_rgb(163,177,198,0.6),-5px_-5px_10px_rgba(255,255,255,0.5)] hover:-translate-y-0.5",
+          "border-border bg-secondary text-secondary-foreground hover:-translate-y-0.5 hover:bg-muted",
         ghost:
-          "text-foreground hover:bg-muted/30 hover:shadow-[inset_3px_3px_6px_rgb(163,177,198,0.45),inset_-3px_-3px_6px_rgba(255,255,255,0.45)]",
+          "text-foreground hover:bg-muted",
         destructive:
-          "bg-destructive text-white shadow-[5px_5px_10px_rgb(163,177,198,0.6),-5px_-5px_10px_rgba(255,255,255,0.5)] hover:-translate-y-0.5",
+          "bg-destructive text-white shadow-[0_14px_34px_rgb(180,35,24,0.22)] hover:-translate-y-0.5",
         link: "text-primary underline-offset-4 hover:underline",
       },
       size: {

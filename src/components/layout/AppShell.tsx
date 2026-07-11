@@ -16,7 +16,7 @@ const nav = [
 function Mark({ compact = false }: { compact?: boolean }) {
   return (
     <span className="flex items-center gap-3 font-heading font-extrabold tracking-tight">
-      <span className="neu-inset grid size-11 place-items-center rounded-2xl text-[#6c63ff]">
+      <span className="grid size-11 place-items-center rounded-2xl gradient-primary shadow-[0_16px_34px_rgb(0,82,255,0.22)]">
         <Crown className="size-5" />
       </span>
       {!compact && <span>CrownScore</span>}
@@ -28,7 +28,7 @@ export function AppShell({ children, title }: { children: React.ReactNode; title
   const pathname = usePathname();
   return (
     <div className="min-h-[100dvh] bg-background text-foreground lg:pl-72">
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 flex-col bg-background p-6 lg:flex">
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 flex-col border-r border-border bg-card p-6 lg:flex">
         <Link href="/dashboard" className="mb-10 rounded-[32px] p-3 neu-focus">
           <Mark />
         </Link>
@@ -39,8 +39,8 @@ export function AppShell({ children, title }: { children: React.ReactNode; title
               href={item.href}
               className={cn(
                 "flex min-h-12 items-center gap-3 rounded-2xl px-4 text-sm font-bold text-muted-foreground transition duration-300 neu-focus",
-                pathname.startsWith(item.href) && "neu-inset text-foreground",
-                !pathname.startsWith(item.href) && "hover:text-foreground"
+                pathname.startsWith(item.href) && "bg-muted text-primary",
+                !pathname.startsWith(item.href) && "hover:bg-muted/70 hover:text-foreground"
               )}
             >
               <item.icon className="size-4" />
@@ -50,7 +50,7 @@ export function AppShell({ children, title }: { children: React.ReactNode; title
         </nav>
         <Link
           href="/check-in/capture"
-          className="mt-8 flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-primary px-4 text-sm font-extrabold text-primary-foreground shadow-[5px_5px_10px_rgb(163,177,198,0.6),-5px_-5px_10px_rgba(255,255,255,0.5)] transition duration-300 hover:-translate-y-0.5 hover:bg-[#7a72ff] neu-focus"
+          className="mt-8 flex min-h-12 items-center justify-center gap-2 rounded-2xl px-4 text-sm font-extrabold transition duration-300 hover:-translate-y-0.5 gradient-primary neu-focus"
         >
           <Camera className="size-4" />
           New check-in
@@ -69,13 +69,13 @@ export function AppShell({ children, title }: { children: React.ReactNode; title
             <p className="text-xs font-bold text-muted-foreground">Personal baseline</p>
             <h1 className="truncate font-heading text-xl font-extrabold tracking-tight">{title ?? "CrownScore"}</h1>
           </div>
-          <Link href="/check-in/capture" className="hidden rounded-2xl px-4 py-3 text-sm font-extrabold text-primary neu-surface neu-focus sm:inline-flex">
+          <Link href="/check-in/capture" className="hidden rounded-2xl px-4 py-3 text-sm font-extrabold gradient-primary neu-focus sm:inline-flex">
             Add check-in
           </Link>
         </header>
         {children}
       </main>
-      <nav className="safe-bottom fixed inset-x-3 bottom-3 z-40 grid grid-cols-5 rounded-[28px] bg-background p-2 lg:hidden neu-surface">
+      <nav className="safe-bottom fixed inset-x-3 bottom-3 z-40 grid grid-cols-5 rounded-[28px] bg-card p-2 lg:hidden neu-surface">
         {nav.map((item) => (
           <Link
             key={item.href}
@@ -83,7 +83,7 @@ export function AppShell({ children, title }: { children: React.ReactNode; title
             className={cn(
               "flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl text-[10px] font-bold text-muted-foreground neu-focus",
               pathname.startsWith(item.href) && !item.primary && "text-primary",
-              item.primary && "bg-primary text-primary-foreground shadow-[5px_5px_10px_rgb(163,177,198,0.45),-5px_-5px_10px_rgba(255,255,255,0.45)]"
+              item.primary && "gradient-primary shadow-[0_12px_30px_rgb(0,82,255,0.22)]"
             )}
           >
             <item.icon className="size-5" />

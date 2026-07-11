@@ -5,6 +5,7 @@ export const RESULT_KEY = "crownscore-result";
 export const CAPTURE_KEY = "crownscore-capture";
 export const QUESTIONNAIRE_KEY = "crownscore-questionnaire";
 export const GUEST_ID_KEY = "crownscore-guest-id";
+export const ONBOARDING_KEY = "crownscore-onboarding";
 
 export type StoredCheckIn = {
   analysis: CheckInAnalysis;

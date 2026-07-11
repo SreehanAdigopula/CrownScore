@@ -1,22 +1,25 @@
 import type { Metadata } from "next";
-import { DM_Sans, Geist_Mono, Plus_Jakarta_Sans } from "next/font/google";
+import { Calistoga, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { GuestSession } from "@/components/auth/GuestSession";
+import { ThemeController } from "@/components/theme/ThemeController";
 
-const dmSans = DM_Sans({
-  variable: "--font-dm-sans",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
 });
 
-const plusJakarta = Plus_Jakarta_Sans({
-  variable: "--font-plus-jakarta",
+const calistoga = Calistoga({
+  variable: "--font-calistoga",
+  subsets: ["latin"],
+  weight: "400",
+});
+
+const jetBrainsMono = JetBrains_Mono({
+  variable: "--font-jetbrains-mono",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "CrownScore | Personal hair progress",
@@ -31,9 +34,9 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${dmSans.variable} ${plusJakarta.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${inter.variable} ${calistoga.variable} ${jetBrainsMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-background text-foreground"><GuestSession />{children}</body>
+      <body className="min-h-full flex flex-col bg-background text-foreground"><ThemeController /><GuestSession />{children}</body>
     </html>
   );
 }
