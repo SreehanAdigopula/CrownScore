@@ -15,7 +15,7 @@ const nav = [
 
 export function AppShell({ children, title }: { children: React.ReactNode; title?: string }) {
   const pathname = usePathname();
-  return <div className="min-h-[100dvh] lg:grid lg:grid-cols-[240px_1fr]">
+  return <div className="min-h-[100dvh] lg:pl-60">
     <aside className="glass-panel fixed inset-y-0 left-0 z-30 hidden w-60 flex-col border-y-0 border-l-0 p-5 lg:flex">
       <Link href="/dashboard" className="mb-9 flex items-center gap-3 text-lg font-semibold"><span className="grid size-9 place-items-center rounded-xl bg-emerald-400 text-zinc-950">F</span>Folliq</Link>
       <nav className="space-y-1">{nav.filter((item) => !item.primary).map((item) => <Link key={item.href} href={item.href} className={cn("flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-zinc-400 transition hover:bg-white/5 hover:text-white", pathname.startsWith(item.href) && "bg-white/8 text-white")}><item.icon className="size-4" />{item.label}</Link>)}</nav>
