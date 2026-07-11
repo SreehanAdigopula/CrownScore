@@ -1,67 +1,64 @@
-# Folliq
+# CrownScore
 
-Folliq is a mobile-first hair-progress tracker built for consistent scalp check-ins. It compares each usable scan with the user's own baseline, shows change over time, applies deterministic safety rules, and uses an LLM only to phrase an educational summary.
+CrownScore is a mobile-first hair-progress tracker built around one simple rule: a user starts with no progress data, and the first usable check-in becomes their personal baseline.
 
-Folliq is not a diagnostic product. Its score is a relative progress metric, not an absolute or clinically validated hair-density measurement.
+CrownScore is not a diagnostic product. Its score is a relative progress metric, not an absolute or clinically validated hair-density measurement.
 
-## What works
+## What is built
 
-- Premium responsive landing page with the React Bits `BlurText` component
-- Anonymous Firebase session initialization with a local guest fallback
-- Guided browser camera, crown alignment guide, countdown, retake, and permission fallback
-- Short adherence and symptom questionnaire
-- Replaceable OpenCV.js `DensityScorer` adapter
-- Pure TypeScript baseline normalization, expected-curve interpolation, confidence, and trend logic
-- Deterministic safety engine that the AI cannot override
-- Groq provider with timeout, Zod validation, and automatic mock fallback
-- Four deterministic demo scenarios
-- Dashboard, charts, history, progress comparison, coach, privacy settings, and result flow
-- Strict Firestore and Storage rules
-- Unit tests for the backend-critical logic
+- Next.js App Router frontend with CrownScore branding and Soft UI styling
+- Empty first-run dashboard, history, progress, and coach states
+- Guided camera capture and questionnaire flow
+- Relative scoring, confidence scoring, trend classification, and deterministic safety rules
+- Optional Groq coach provider with timeout, Zod validation, and automatic mock fallback
+- Firebase client/admin adapters plus Firestore and Storage rules
+- Local guest fallback when Firebase public config is not present
 
-## Local setup
+## Local development
 
 ```bash
 npm install
-cp .env.example .env.local
 npm run dev
 ```
 
-Open `http://localhost:3000`. With no Firebase or Groq values, the complete seeded demo remains available. Camera access requires `localhost` or HTTPS.
+Open `http://localhost:3000`. With no Firebase or Groq values, CrownScore still runs locally using browser-local records and the deterministic mock coach. Camera access requires `localhost` or HTTPS.
+
+## First-run data behavior
+
+New users start with zero records:
+
+- Dashboard shows no baseline yet
+- History shows no saved photos
+- Progress shows no chart
+- Coach shows no summary
+
+After the first captured check-in, CrownScore saves one local record dated today and treats that score as baseline `100`.
 
 ## Firebase setup
 
 1. Create a Firebase project and web app.
-2. Enable Anonymous Authentication.
-3. Create Firestore and Storage.
-4. Copy the web configuration and Admin service-account values into `.env.local`.
+2. Add the `NEXT_PUBLIC_FIREBASE_*` values to `.env.local` for local development.
+3. Add the same public values to Vercel Project Settings for deployment.
+4. For server-side Firebase Admin, provide either application default credentials or the service-account values in `.env.example`.
 5. Deploy `firestore.rules` and `storage.rules` with the Firebase CLI.
 
-`FIREBASE_PRIVATE_KEY` accepts escaped newlines. The Admin helper converts `\\n` to real line breaks at runtime. Admin clients are initialized lazily so builds do not require credentials.
+Do not commit real API keys, private keys, or service account JSON to GitHub.
 
 ## Groq
 
 Set `GROQ_API_KEY` and optionally `GROQ_MODEL`. If the key is missing, the call times out, the provider rate-limits, or its JSON is invalid, `MockCoachProvider` returns a deterministic educational summary. AI failure never blocks a scan result.
 
-## Quality checks
+## Useful scripts
 
 ```bash
-npm test
-npm run typecheck
 npm run lint
+npm run typecheck
+npm test
 npm run build
 ```
 
 ## Deploy to Vercel
 
-Import the repository into Vercel, add the variables from `.env.example`, and deploy as a Next.js project. Keep `DEMO_MODE=true` for judge builds. Set it to `false` for a real environment after Firebase is configured.
-
-## Privacy model
-
-- Images use `users/{uid}/check-ins/{checkInId}/original.webp` and `thumbnail.webp`.
-- Storage rules require the authenticated UID to match the path.
-- Browser compression creates a fresh image and removes source EXIF metadata.
-- Clients cannot write analysis, safety, coach, or audit documents.
-- Users can delete check-ins; demo reset is scoped to demo-tagged data for the current user.
+Import the repository into Vercel, add the variables from `.env.example`, and deploy as a Next.js project. Keep secrets in Vercel environment variables, not in source control.
 
 See [ARCHITECTURE.md](./ARCHITECTURE.md), [API.md](./API.md), [DEMO_SCRIPT.md](./DEMO_SCRIPT.md), and [KNOWN_LIMITATIONS.md](./KNOWN_LIMITATIONS.md).

@@ -2,27 +2,150 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowUpRight, CalendarDays, Camera, ShieldCheck, ShieldAlert } from "lucide-react";
-import { createDemoDashboard } from "@/server/demo/demo-data";
-import { getDemoScenario } from "@/lib/demo-client";
+import { ArrowUpRight, Camera, CalendarDays, ShieldAlert, ShieldCheck, Sparkles } from "lucide-react";
+import { getStoredCheckIns, toProgressPoint, type StoredCheckIn } from "@/lib/crownscore-client";
 import { TrendChart } from "@/components/dashboard/TrendChart";
-import type { DashboardData, DemoScenario } from "@/server/domain/types";
 
-const trendLabels = { AHEAD_OF_EXPECTED: "Ahead of expected", ON_TRACK: "On track", WORTH_WATCHING: "Worth watching", INSUFFICIENT_QUALITY: "Low image quality", INSUFFICIENT_HISTORY: "More history needed" };
+const trendLabels = {
+  AHEAD_OF_EXPECTED: "Ahead of expected",
+  ON_TRACK: "On track",
+  WORTH_WATCHING: "Worth watching",
+  INSUFFICIENT_QUALITY: "Low image quality",
+  INSUFFICIENT_HISTORY: "More history needed",
+};
+
+function EmptyDashboard() {
+  return (
+    <div className="mx-auto max-w-7xl space-y-6 px-4 py-6 lg:px-10">
+      <section className="grid gap-6 xl:grid-cols-[1.25fr_0.75fr]">
+        <div className="neu-surface-lg rounded-[32px] p-6 sm:p-10">
+          <div className="neu-inset mb-8 grid size-16 place-items-center rounded-[24px] text-primary">
+            <Sparkles className="size-7" />
+          </div>
+          <p className="text-sm font-bold text-muted-foreground">No baseline yet</p>
+          <h2 className="mt-3 max-w-2xl font-heading text-4xl font-extrabold tracking-tight sm:text-5xl">Take your first CrownScore photo today.</h2>
+          <p className="mt-4 max-w-xl text-sm leading-6 text-muted-foreground">Your first usable check-in becomes the baseline. History, score movement, streaks, and coach notes stay empty until you create real records.</p>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Link href="/check-in/capture" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-primary px-5 text-sm font-extrabold text-primary-foreground shadow-[5px_5px_10px_rgb(163,177,198,0.6),-5px_-5px_10px_rgba(255,255,255,0.5)] transition duration-300 hover:-translate-y-0.5 hover:bg-[#7a72ff] neu-focus">
+              <Camera className="size-4" />
+              Start baseline
+            </Link>
+            <Link href="/settings" className="inline-flex min-h-12 items-center justify-center rounded-2xl px-5 text-sm font-extrabold text-foreground neu-surface neu-focus">Privacy settings</Link>
+          </div>
+        </div>
+        <div className="grid gap-6">
+          <article className="neu-inset-deep rounded-[32px] p-6">
+            <p className="text-sm font-bold text-muted-foreground">Current score</p>
+            <p className="metric-number mt-4">--</p>
+            <p className="mt-2 text-sm text-muted-foreground">Waiting for your first photo</p>
+          </article>
+          <article className="neu-inset-deep rounded-[32px] p-6">
+            <p className="text-sm font-bold text-muted-foreground">Check-ins</p>
+            <p className="metric-number mt-4">0</p>
+            <p className="mt-2 text-sm text-muted-foreground">No saved history yet</p>
+          </article>
+        </div>
+      </section>
+    </div>
+  );
+}
 
 export function DashboardClient() {
-  const [data, setData] = useState<DashboardData>(() => createDemoDashboard("healthy"));
+  const [records, setRecords] = useState<StoredCheckIn[]>([]);
+
   useEffect(() => {
-    const refresh = (event?: Event) => setData(createDemoDashboard(((event as CustomEvent<DemoScenario>)?.detail ?? getDemoScenario())));
-    refresh(); window.addEventListener("folliq:scenario", refresh); return () => window.removeEventListener("folliq:scenario", refresh);
+    const refresh = () => setRecords(getStoredCheckIns());
+    refresh();
+    window.addEventListener("crownscore:check-ins", refresh);
+    return () => window.removeEventListener("crownscore:check-ins", refresh);
   }, []);
-  const { latest } = data;
+
+  if (records.length === 0) return <EmptyDashboard />;
+
+  const latestRecord = records.at(-1)!;
+  const latest = latestRecord.analysis;
+  const history = records.map(toProgressPoint);
   const safetyElevated = latest.safetyStatus !== "CLEAR";
-  return <div className="mx-auto max-w-7xl space-y-5 px-4 py-5 lg:px-8">
-    {safetyElevated && <section className="rounded-2xl border border-amber-400/25 bg-amber-400/10 p-4"><div className="flex gap-3"><ShieldAlert className="mt-0.5 size-5 shrink-0 text-amber-300" /><div><h2 className="font-medium text-amber-100">This pattern is worth discussing</h2><p className="mt-1 text-sm leading-6 text-amber-100/65">Several relative scores are declining. Folliq cannot determine the cause. Consider sharing this timeline with a dermatologist.</p></div></div></section>}
-    <section className="grid gap-5 xl:grid-cols-[1.35fr_0.65fr]"><div className="glass-panel rounded-3xl p-5 sm:p-7"><div className="flex flex-wrap items-start justify-between gap-5"><div><p className="text-sm text-zinc-500">Current relative score</p><div className="mt-2 flex items-baseline gap-3"><span className="metric-number">{latest.normalizedScore}</span><span className={latest.baselineChangePercent >= 0 ? "text-emerald-300" : "text-amber-300"}>{latest.baselineChangePercent >= 0 ? "+" : ""}{latest.baselineChangePercent}%</span></div><p className="mt-2 text-xs text-zinc-500">Baseline = 100</p></div><span className="rounded-full bg-emerald-400/10 px-3 py-1.5 text-xs font-medium text-emerald-300">{trendLabels[latest.trendStatus]}</span></div><div className="mt-6"><TrendChart data={data.history} /></div><div className="mt-2 flex flex-wrap gap-5 text-xs text-zinc-500"><span><span className="mr-2 inline-block size-2 rounded-full bg-emerald-400" />Relative score</span><span><span className="mr-2 inline-block w-4 border-t border-dashed border-zinc-500 align-middle" />Educational expected curve</span></div></div>
-      <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-1"><article className="glass-panel rounded-3xl p-5"><div className="flex items-center justify-between"><CalendarDays className="size-5 text-emerald-300" /><span className="text-xs text-zinc-500">Week {latest.treatmentWeek}</span></div><h2 className="mt-8 text-lg font-medium">Next check-in</h2><p className="mt-1 text-sm text-zinc-500">One week keeps this series consistent.</p><Link href="/check-in/capture" className="mt-5 flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-semibold text-zinc-950 hover:bg-zinc-200"><Camera className="size-4" />Start guided capture</Link></article><article className="glass-panel rounded-3xl p-5"><div className="flex items-center justify-between"><p className="text-sm text-zinc-500">Routine adherence</p><span className="text-2xl font-semibold">{latest.adherenceRate}%</span></div><div className="mt-5 flex items-center justify-between border-t border-white/8 pt-4 text-sm"><span className="text-zinc-500">Check-in streak</span><span>{data.streak} weeks</span></div><div className="mt-3 flex items-center justify-between text-sm"><span className="text-zinc-500">Image confidence</span><span>{Math.round(latest.quality.confidence * 100)}%</span></div></article></div>
-    </section>
-    <section className="grid gap-5 lg:grid-cols-[0.8fr_1.2fr]"><article className="glass-panel rounded-3xl p-5 sm:p-6"><div className="flex items-center gap-2 text-sm text-zinc-400">{safetyElevated ? <ShieldAlert className="size-4 text-amber-300" /> : <ShieldCheck className="size-4 text-emerald-300" />}Deterministic safety review</div><h2 className="mt-5 text-xl font-medium">{safetyElevated ? "Professional guidance suggested" : "No safety signals detected"}</h2><p className="mt-2 text-sm leading-6 text-zinc-500">Safety checks use fixed rules and cannot be changed by the AI coach.</p></article><article className="glass-panel rounded-3xl p-5 sm:p-6"><p className="text-sm text-emerald-300">Coach summary</p><h2 className="mt-4 text-2xl font-medium tracking-tight">{data.coach.headline}</h2><p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-400">{data.coach.summary}</p><Link href="/coach" className="mt-5 inline-flex items-center gap-1 text-sm font-medium text-white">Read full summary <ArrowUpRight className="size-4" /></Link></article></section>
-  </div>;
+  const baseline = history[0];
+  const baselineChange = Number((latest.normalizedScore - baseline.normalizedScore).toFixed(1));
+
+  return (
+    <div className="mx-auto max-w-7xl space-y-6 px-4 py-6 lg:px-10">
+      {safetyElevated && (
+        <section className="rounded-[28px] bg-background p-5 text-[#7a4b00] shadow-[inset_6px_6px_10px_rgb(163,177,198,0.45),inset_-6px_-6px_10px_rgba(255,255,255,0.55)]">
+          <div className="flex gap-3">
+            <ShieldAlert className="mt-0.5 size-5 shrink-0" />
+            <div>
+              <h2 className="font-bold">This pattern is worth discussing</h2>
+              <p className="mt-1 text-sm leading-6">CrownScore cannot diagnose the cause, but this check-in triggered fixed safety guidance.</p>
+            </div>
+          </div>
+        </section>
+      )}
+      <section className="grid gap-6 xl:grid-cols-[1.35fr_0.65fr]">
+        <div className="neu-surface-lg rounded-[32px] p-6 sm:p-8">
+          <div className="flex flex-wrap items-start justify-between gap-5">
+            <div>
+              <p className="text-sm font-bold text-muted-foreground">Current relative score</p>
+              <div className="mt-3 flex items-baseline gap-3">
+                <span className="metric-number">{latest.normalizedScore}</span>
+                <span className={baselineChange >= 0 ? "font-bold text-[#0f766e]" : "font-bold text-[#b45309]"}>
+                  {baselineChange >= 0 ? "+" : ""}{baselineChange}%
+                </span>
+              </div>
+              <p className="mt-2 text-xs text-muted-foreground">Baseline = your first saved check-in</p>
+            </div>
+            <span className="neu-inset rounded-full px-4 py-2 text-xs font-bold text-primary">{trendLabels[latest.trendStatus]}</span>
+          </div>
+          {history.length > 1 ? (
+            <div className="mt-8"><TrendChart data={history} /></div>
+          ) : (
+            <div className="neu-inset-deep mt-8 grid min-h-72 place-items-center rounded-[28px] p-6 text-center">
+              <div>
+                <p className="font-heading text-2xl font-extrabold tracking-tight">Baseline saved today</p>
+                <p className="mt-2 max-w-sm text-sm leading-6 text-muted-foreground">Take another check-in later to unlock the trend chart.</p>
+              </div>
+            </div>
+          )}
+        </div>
+        <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-1">
+          <article className="neu-surface rounded-[32px] p-6">
+            <div className="flex items-center justify-between">
+              <CalendarDays className="size-5 text-primary" />
+              <span className="text-xs font-bold text-muted-foreground">Week {latest.treatmentWeek}</span>
+            </div>
+            <h2 className="mt-8 font-heading text-xl font-extrabold tracking-tight">Next check-in</h2>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">Keep the same angle and lighting for a cleaner comparison.</p>
+            <Link href="/check-in/capture" className="mt-6 flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-primary px-4 text-sm font-extrabold text-primary-foreground shadow-[5px_5px_10px_rgb(163,177,198,0.6),-5px_-5px_10px_rgba(255,255,255,0.5)] transition duration-300 hover:-translate-y-0.5 hover:bg-[#7a72ff] neu-focus">
+              <Camera className="size-4" />
+              Start capture
+            </Link>
+          </article>
+          <article className="neu-surface rounded-[32px] p-6">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-bold text-muted-foreground">Routine adherence</p>
+              <span className="font-mono text-2xl font-semibold">{latest.adherenceRate ?? "--"}{latest.adherenceRate == null ? "" : "%"}</span>
+            </div>
+            <div className="mt-6 space-y-4 text-sm">
+              <div className="flex items-center justify-between"><span className="text-muted-foreground">Saved check-ins</span><span className="font-bold">{records.length}</span></div>
+              <div className="flex items-center justify-between"><span className="text-muted-foreground">Image confidence</span><span className="font-bold">{Math.round(latest.quality.confidence * 100)}%</span></div>
+            </div>
+          </article>
+        </div>
+      </section>
+      <section className="grid gap-6 lg:grid-cols-[0.8fr_1.2fr]">
+        <article className="neu-surface rounded-[32px] p-6">
+          <div className="flex items-center gap-2 text-sm font-bold text-muted-foreground">{safetyElevated ? <ShieldAlert className="size-4 text-[#b45309]" /> : <ShieldCheck className="size-4 text-[#0f766e]" />}Fixed safety review</div>
+          <h2 className="mt-5 font-heading text-xl font-extrabold tracking-tight">{safetyElevated ? "Review suggested" : "No safety signals detected"}</h2>
+          <p className="mt-2 text-sm leading-6 text-muted-foreground">Safety rules are deterministic and separate from the AI summary.</p>
+        </article>
+        <article className="neu-surface rounded-[32px] p-6">
+          <p className="text-sm font-bold text-primary">Coach summary</p>
+          <h2 className="mt-4 font-heading text-2xl font-extrabold tracking-tight">{latestRecord.coach.headline}</h2>
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">{latestRecord.coach.summary}</p>
+          <Link href="/coach" className="mt-5 inline-flex items-center gap-1 text-sm font-bold text-foreground neu-focus">Read full summary <ArrowUpRight className="size-4" /></Link>
+        </article>
+      </section>
+    </div>
+  );
 }

@@ -20,7 +20,7 @@ export class MockCoachProvider implements CoachProvider {
       summary: elevated ? "Your check-in contains a signal that the deterministic safety review flagged. This is not a diagnosis, but it is a useful reason to pause and review the pattern." : `Your relative score is ${input.normalizedScore}, compared with your personal baseline of 100. Consistent photos will make the trend more useful over time.`,
       nextStep: elevated ? "Consider discussing this pattern with a dermatologist, especially if symptoms continue." : "Keep your routine and camera setup consistent, then check in again on schedule.",
       regimenObservation: input.adherenceRate == null ? null : `Reported routine adherence is ${input.adherenceRate}%.`,
-      disclaimer: "Educational only. Folliq does not diagnose conditions or measure clinical hair density.",
+      disclaimer: "Educational only. CrownScore does not diagnose conditions or measure clinical hair density.",
       fallbackUsed: true,
     };
   }

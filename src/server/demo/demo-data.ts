@@ -16,10 +16,10 @@ export function createDemoDashboard(scenario: DemoScenario = "healthy"): Dashboa
   const baselineChange = Number((latestPoint.normalizedScore - 100).toFixed(1));
   const coach: CoachOutput = {
     headline: config.headline,
-    summary: config.safety === "SEEK_PROFESSIONAL_GUIDANCE" ? "Your relative score has declined across several consistent check-ins. Folliq cannot explain why, but the pattern and reported context deserve professional attention." : `Your latest relative score is ${latestPoint.normalizedScore}. The series is based on your own baseline, and the photo quality has remained consistent enough to compare.`,
+    summary: config.safety === "SEEK_PROFESSIONAL_GUIDANCE" ? "Your relative score has declined across several consistent check-ins. CrownScore cannot explain why, but the pattern and reported context deserve professional attention." : `Your latest relative score is ${latestPoint.normalizedScore}. The series is based on your own baseline, and the photo quality has remained consistent enough to compare.`,
     nextStep: config.safety === "SEEK_PROFESSIONAL_GUIDANCE" ? "Consider sharing this timeline with a dermatologist." : "Keep the same lighting and angle for your next scheduled check-in.",
     regimenObservation: `Reported adherence averaged ${Math.round(config.adherence.reduce((a, b) => a + b, 0) / config.adherence.length)}%.`,
-    disclaimer: "Educational only. Folliq does not diagnose conditions or measure clinical hair density.",
+    disclaimer: "Educational only. CrownScore does not diagnose conditions or measure clinical hair density.",
     fallbackUsed: true,
   };
   return {
@@ -35,7 +35,7 @@ export function createDemoDashboard(scenario: DemoScenario = "healthy"): Dashboa
       safetyRuleIds: config.safety === "SEEK_PROFESSIONAL_GUIDANCE" ? ["RAPID_RELATIVE_DECLINE", "REPEATED_DECLINE"] : config.safety === "WATCH" ? ["INCONSISTENT_ADHERENCE"] : [],
       quality: { brightness: 0.61, blur: 0.84, contrast: 0.39, confidence: 0.88, status: "GOOD" },
       isDemoData: true,
-      algorithmVersion: "folliq-relative-v1",
+      algorithmVersion: "crownscore-relative-v1",
     },
     coach,
     nextCheckIn: "2026-07-18",

@@ -1,6 +1,6 @@
 import type { Questionnaire, SafetyStatus } from "@/server/domain/types";
 
-export const SAFETY_ENGINE_VERSION = "folliq-safety-v1";
+export const SAFETY_ENGINE_VERSION = "crownscore-safety-v1";
 
 export function evaluateSafety(input: { baselineChangePercent: number; consecutiveDeclines: number; confidence: number; questionnaire: Questionnaire }): { status: SafetyStatus; ruleIds: string[]; reasons: string[] } {
   const rules: string[] = [];

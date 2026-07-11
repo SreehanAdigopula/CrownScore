@@ -20,7 +20,7 @@ Route handlers parse and validate. Services orchestrate workflows. Repositories 
 
 ## Runtime modes
 
-The UI always has a deterministic local demo mode. Firebase client initialization occurs only when public configuration exists. Firebase Admin is lazy and used only from server modules. Groq is optional.
+The product UI starts empty and reads only real local/Firebase check-ins. Synthetic demo fixtures are isolated under internal demo routes. Firebase client initialization occurs only when public configuration exists. Firebase Admin is lazy and used only from server modules. Groq is optional.
 
 ## Data model
 

@@ -1,12 +1,11 @@
-# Judge demo script
+# Internal fixture script
 
-1. Open `/demo` and load Healthy recovery.
-2. Show the dashboard score and explain that baseline always starts at 100.
-3. Point out the actual and educational expected curves.
-4. Open the guided capture and show alignment, camera permission, and retake states.
-5. Complete the short questionnaire.
-6. Show analysis stages that mirror the real service pipeline.
-7. Review the score, confidence, fixed safety result, and coach wording.
-8. Open Progress and History.
-9. Load Safety warning from `/demo`.
-10. Emphasize that safety and scoring are deterministic. The LLM only changes educational wording.
+The normal CrownScore product flow should begin with no data. Use this checklist only for internal testing.
+
+1. Open `/dashboard` in a fresh browser profile and confirm the empty baseline state.
+2. Run a first check-in and confirm it is saved as today's baseline with score `100`.
+3. Open `/history` and confirm there is exactly one record dated today.
+4. Open `/progress` and confirm the trend chart waits for a second check-in.
+5. Open `/coach` and confirm the summary is based on the saved check-in.
+6. Open `/demo` only when testing synthetic fixtures. Fixture selections must not mutate dashboard/history/progress data.
+7. Use `/api/demo/seed` only for backend fixture validation.

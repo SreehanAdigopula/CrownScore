@@ -1,1 +1,1 @@
-import { NextResponse } from "next/server"; export function GET(){ return NextResponse.json({success:true,data:{status:"ok",demoMode:process.env.DEMO_MODE!=="false",timestamp:new Date().toISOString()}}); }
+import { NextResponse } from "next/server"; export function GET(){ return NextResponse.json({success:true,data:{status:"ok",internalFixturesEnabled:process.env.INTERNAL_FIXTURES_ENABLED!=="false",firebaseAuthRequired:process.env.REQUIRE_FIREBASE_AUTH==="true",timestamp:new Date().toISOString()}}); }

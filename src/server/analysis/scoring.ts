@@ -1,6 +1,6 @@
 import type { ImageQuality, TrendStatus } from "@/server/domain/types";
 
-export const ALGORITHM_VERSION = "folliq-relative-v1" as const;
+export const ALGORITHM_VERSION = "crownscore-relative-v1" as const;
 
 export function normalizeToBaseline(rawDensityRatio: number, baselineRatio: number): number {
   if (!Number.isFinite(rawDensityRatio) || !Number.isFinite(baselineRatio) || baselineRatio <= 0) {

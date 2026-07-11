@@ -36,7 +36,7 @@ export type CheckInAnalysis = {
   quality: ImageQuality;
   adherenceRate: number | null;
   isDemoData: boolean;
-  algorithmVersion: "folliq-relative-v1";
+  algorithmVersion: "crownscore-relative-v1";
 };
 
 export type CoachOutput = {
