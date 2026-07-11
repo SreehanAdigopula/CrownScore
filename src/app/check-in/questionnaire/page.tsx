@@ -15,9 +15,11 @@ export default function QuestionnairePage() {
   const [shedding, setShedding] = useState("TYPICAL");
   const [irritation, setIrritation] = useState(false);
   const [pain, setPain] = useState(false);
+  const [notes, setNotes] = useState("");
 
   const submit = () => {
-    sessionStorage.setItem(QUESTIONNAIRE_KEY, JSON.stringify({ adherenceRate: adherence[0], shedding, irritation, scalpPain: pain, routineChanged: false }));
+    const trimmed = notes.trim().slice(0, 600);
+    sessionStorage.setItem(QUESTIONNAIRE_KEY, JSON.stringify({ adherenceRate: adherence[0], shedding, irritation, scalpPain: pain, routineChanged: trimmed.length > 0, ...(trimmed ? { notes: trimmed } : {}) }));
     router.push("/check-in/analyzing");
   };
 
@@ -50,7 +52,7 @@ export default function QuestionnairePage() {
             </div>
             <div>
               <Label htmlFor="notes">Notes (optional)</Label>
-              <Textarea id="notes" className="mt-2" placeholder="Any major routine changes?" />
+              <Textarea id="notes" className="mt-2" placeholder="Any major routine changes?" value={notes} onChange={(event) => setNotes(event.target.value)} maxLength={600} />
             </div>
           </div>
           <Button className="mt-8 h-12 w-full" onClick={submit}>Analyze check-in</Button>

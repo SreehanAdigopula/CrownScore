@@ -4,16 +4,23 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
-import { CAPTURE_KEY, QUESTIONNAIRE_KEY, RESULT_KEY, countConsecutiveDeclines, getStoredCheckIns, getTreatmentWeek, saveStoredCheckIn, toProgressPoint } from "@/lib/crownscore-client";
+import { scoreCapture } from "@/features/check-ins/score-capture";
+import { CAPTURE_KEY, QUESTIONNAIRE_KEY, RESULT_KEY, countConsecutiveDeclines, createThumbnail, getOnboardingPrefs, getStoredCheckIns, getTreatmentWeek, saveStoredCheckIn, toProgressPoint } from "@/lib/crownscore-client";
 
 const stages = ["Checking image quality", "Measuring visible density", "Comparing with your baseline", "Reviewing your progress trend", "Evaluating safety signals", "Preparing your coach summary"];
 
-function getNextMockDensityRatio(baselineRatio: number, historyCount: number) {
+/* Only used on the photo-free path ("Continue without preview"): simulates a plausible
+   trajectory so the rest of the product stays demoable without camera access. */
+function getSimulatedDensityRatio(baselineRatio: number, historyCount: number) {
   if (historyCount === 0) return baselineRatio;
-
   const steadyTrend = Math.min(0.18, historyCount * 0.018);
   const naturalVariation = Math.sin(historyCount * 1.7) * 0.006;
   return Number((baselineRatio * (1 + steadyTrend + naturalVariation)).toFixed(3));
+}
+
+/* The analysis API requires ratios in (0, 1); real captures of extreme frames can hit 0 or 1 exactly. */
+function clampRatio(value: number) {
+  return Math.min(0.98, Math.max(0.02, value));
 }
 
 export default function AnalyzingPage() {
@@ -23,14 +30,22 @@ export default function AnalyzingPage() {
 
   useEffect(() => {
     let cancelled = false;
+    const ticker = setInterval(() => setActive((current) => Math.min(current + 1, stages.length - 2)), 650);
     const run = async () => {
       try {
         const questionnaire = JSON.parse(sessionStorage.getItem(QUESTIONNAIRE_KEY) ?? "{}");
+        const capture = sessionStorage.getItem(CAPTURE_KEY);
+        const prefs = getOnboardingPrefs();
         const records = getStoredCheckIns();
         const points = records.map(toProgressPoint);
-        const baseline = records[0]?.analysis.rawDensityRatio ?? 0.498;
         const latest = records.at(-1)?.analysis;
-        const rawDensityRatio = getNextMockDensityRatio(baseline, records.length);
+
+        const scored = capture ? await scoreCapture(capture) : null;
+        if (cancelled) return;
+        const fallbackBaseline = scored ? clampRatio(scored.rawDensityRatio) : 0.498;
+        const baseline = records[0]?.analysis.rawDensityRatio ?? fallbackBaseline;
+        const rawDensityRatio = scored ? clampRatio(scored.rawDensityRatio) : getSimulatedDensityRatio(baseline, records.length);
+
         const response = await fetch("/api/check-ins/crownscore/analyze", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -38,30 +53,33 @@ export default function AnalyzingPage() {
             rawDensityRatio,
             baselineRatio: baseline,
             previousScore: latest?.normalizedScore ?? null,
-            treatmentWeek: getTreatmentWeek(records[0]?.analysis.capturedAt),
+            treatmentWeek: getTreatmentWeek(prefs.startDate ?? records[0]?.analysis.capturedAt),
+            treatment: prefs.treatment,
+            coachStyle: prefs.coachStyle,
             historyCount: records.length,
             consecutiveDeclines: countConsecutiveDeclines(points),
+            ...(scored ? { image: { brightness: scored.brightness, blur: scored.blur, contrast: scored.contrast } } : {}),
             questionnaire,
           }),
         });
         const result = await response.json();
         if (!response.ok || !result.success) throw new Error(result.error?.message ?? "Analysis failed");
-        for (let index = 1; index < stages.length; index += 1) {
-          await new Promise((resolve) => setTimeout(resolve, 320));
-          if (cancelled) return;
-          setActive(index);
-        }
+        clearInterval(ticker);
+        if (cancelled) return;
+        setActive(stages.length - 1);
         await new Promise((resolve) => setTimeout(resolve, 360));
-        const record = { ...result.data, preview: sessionStorage.getItem(CAPTURE_KEY) };
-        sessionStorage.setItem(RESULT_KEY, JSON.stringify(record));
+        const preview = capture ? await createThumbnail(capture).catch(() => capture) : null;
+        const record = { ...result.data, preview };
+        sessionStorage.setItem(RESULT_KEY, JSON.stringify({ ...result.data, preview: capture ?? preview }));
         saveStoredCheckIn(record);
         router.replace(`/check-in/result/${result.data.analysis.id}`);
       } catch (err) {
+        clearInterval(ticker);
         setError(err instanceof Error ? err.message : "Analysis could not finish.");
       }
     };
     void run();
-    return () => { cancelled = true; };
+    return () => { cancelled = true; clearInterval(ticker); };
   }, [router]);
 
   return (

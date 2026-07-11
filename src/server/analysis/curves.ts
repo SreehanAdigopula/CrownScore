@@ -1,5 +1,11 @@
 import type { TreatmentType } from "@/server/domain/types";
 
+/* ILLUSTRATIVE, NOT CLINICAL. These curves encode the qualitative shape of published treatment
+   response patterns — e.g. minoxidil's early shedding dip around weeks 2-8 followed by gradual
+   recovery, and finasteride's slower, flatter response — but the numbers are hand-tuned for a
+   relative, self-baseline score (week 0 = 100), not derived from a clinical dataset. They exist
+   to set expectations ("a dip at week 4 is normal"), never to evaluate treatment effectiveness.
+   The UI and pitch must describe them as educational expected trajectories. */
 export const EXPECTED_CURVES: Record<TreatmentType, ReadonlyArray<{ week: number; score: number }>> = {
   MINOXIDIL: [{ week: 0, score: 100 }, { week: 4, score: 98 }, { week: 8, score: 101 }, { week: 12, score: 105 }, { week: 18, score: 111 }, { week: 24, score: 116 }],
   FINASTERIDE: [{ week: 0, score: 100 }, { week: 4, score: 99 }, { week: 8, score: 101 }, { week: 12, score: 104 }, { week: 18, score: 108 }, { week: 24, score: 112 }],
