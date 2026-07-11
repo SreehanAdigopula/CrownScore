@@ -12,7 +12,7 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   return Promise.race([promise, new Promise<never>((_, reject) => setTimeout(() => reject(new Error("Scoring timed out.")), ms))]);
 }
 
-async function loadGuideRegion(dataUrl: string): Promise<HTMLCanvasElement> {
+export async function loadGuideRegion(dataUrl: string): Promise<HTMLCanvasElement> {
   const image = new Image();
   await new Promise<void>((resolve, reject) => {
     image.onload = () => resolve();

@@ -8,4 +8,5 @@
 - Firebase upload orchestration and thumbnail generation are represented by secure adapters and rules, but require project credentials to exercise live.
 - In-memory and local demo data are intentionally deterministic and are not a substitute for Firestore persistence.
 - Camera quality labels currently reflect implemented lighting, sharpness, and alignment heuristics. There is no claim of precise head tracking.
-- No ONNX model is included. It should only be considered after the OpenCV workflow is validated on consented data.
+- The ONNX capture-quality classifier is a gate ("is this photo usable?"), not a diagnostic or hair-health model. It is trained on public hair-segmentation datasets (Figaro1k) and synthetic corruptions, not clinical or dermatological data. If `public/models/crown-classifier.onnx` is a dev build from `ml/` synthetic mode, it has never seen a real photograph — retrain on real data before making accuracy claims (see ml/README.md).
+- If the classifier model file or the onnxruntime-web WASM runtime is unavailable, the capture flow skips the gate entirely and falls back to metadata-only validation.
