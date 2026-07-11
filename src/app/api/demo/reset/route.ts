@@ -1,0 +1,1 @@
+import { NextResponse } from "next/server"; export function POST(){ if(process.env.DEMO_MODE==="false")return NextResponse.json({success:false,error:{code:"DEMO_DISABLED",message:"Demo mode is disabled."}},{status:403}); return NextResponse.json({success:true,data:{deletedDemoRecords:true,scope:"CURRENT_USER_ONLY"}}); }

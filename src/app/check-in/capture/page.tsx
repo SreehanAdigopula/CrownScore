@@ -1,0 +1,1 @@
+import { AppShell } from "@/components/layout/AppShell"; import { CameraCapture } from "@/components/camera/CameraCapture"; export default function CapturePage(){ return <AppShell title="Guided capture"><CameraCapture /></AppShell>; }

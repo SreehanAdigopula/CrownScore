@@ -1,0 +1,1 @@
+import { NextResponse } from "next/server"; export function GET(){ return NextResponse.json({success:true,data:{status:"ok",demoMode:process.env.DEMO_MODE!=="false",timestamp:new Date().toISOString()}}); }

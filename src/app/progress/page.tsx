@@ -1,0 +1,1 @@
+import { AppShell } from "@/components/layout/AppShell"; import { ProgressClient } from "@/components/dashboard/ProgressClient"; export default function ProgressPage(){ return <AppShell title="Progress"><ProgressClient /></AppShell>; }

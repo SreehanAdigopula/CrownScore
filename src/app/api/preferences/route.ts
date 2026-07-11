@@ -1,0 +1,4 @@
+import { NextResponse } from "next/server"; import { z } from "zod";
+const schema=z.object({treatment:z.enum(["MINOXIDIL","FINASTERIDE","GENERAL","MONITORING"]).optional(),coachStyle:z.enum(["SUPPORTIVE","DIRECT","SCIENTIFIC","MINIMAL"]).optional(),checkInFrequency:z.enum(["WEEKLY","BIWEEKLY","MONTHLY","MANUAL"]).optional()});
+export function GET(){ return NextResponse.json({success:true,data:{treatment:"MINOXIDIL",coachStyle:"SUPPORTIVE",checkInFrequency:"WEEKLY",source:"DEMO_DEFAULT"}}); }
+export async function PATCH(request:Request){ const parsed=schema.safeParse(await request.json()); if(!parsed.success)return NextResponse.json({success:false,error:{code:"INVALID_PREFERENCES",message:"Preferences were invalid.",details:parsed.error.issues}},{status:400}); return NextResponse.json({success:true,data:parsed.data}); }

@@ -1,0 +1,23 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function owns(uid) { return signedIn() && request.auth.uid == uid; }
+    match /users/{uid} {
+      allow read: if owns(uid);
+      allow create: if owns(uid) && request.resource.data.keys().hasOnly(['uid','isAnonymous','onboardingComplete','createdAt','lastActiveAt','treatment','coachStyle','isDemoUser']);
+      allow update: if owns(uid) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['onboardingComplete','lastActiveAt','treatment','coachStyle']);
+      match /preferences/{document=**} { allow read, write: if owns(uid); }
+      match /checkIns/{checkInId} {
+        allow read, delete: if owns(uid);
+        allow create: if owns(uid) && !request.resource.data.keys().hasAny(['analysis','safetyStatus','coachSummary']);
+        allow update: if owns(uid) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['analysis','safetyStatus','coachSummary']);
+        match /analysis/{document=**} { allow read: if owns(uid); allow write: if false; }
+        match /coachSummary/{document=**} { allow read: if owns(uid); allow write: if false; }
+      }
+      match /auditEvents/{document=**} { allow read: if owns(uid); allow write: if false; }
+    }
+    match /referenceCurves/{document=**} { allow read: if true; allow write: if false; }
+    match /demoScenarios/{document=**} { allow read: if true; allow write: if false; }
+  }
+}
