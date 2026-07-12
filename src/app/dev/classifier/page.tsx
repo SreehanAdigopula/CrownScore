@@ -14,19 +14,18 @@ function makeCanvas(draw: (context: CanvasRenderingContext2D) => void): string {
 }
 
 function drawScalp(context: CanvasRenderingContext2D) {
-  context.fillStyle = "#c99a72";
-  context.fillRect(0, 0, 900, 900);
-  context.strokeStyle = "#2a1d12";
-  context.lineWidth = 3;
+  // Deterministic, high-frequency brown texture approximating a close hair crop.
+  // This is only a browser wiring fixture; accuracy is measured on held-out data.
   let seed = 42;
   const random = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
-  for (let index = 0; index < 700; index += 1) {
-    const x = random() * 900, y = random() * 900;
-    context.beginPath();
-    context.moveTo(x, y);
-    context.quadraticCurveTo(x + random() * 40 - 20, y + 30, x + random() * 20 - 10, y + 70);
-    context.stroke();
+  const pixels = context.createImageData(900, 900);
+  for (let index = 0; index < pixels.data.length; index += 4) {
+    pixels.data[index] = 80 + (random() - 0.5) * 140;
+    pixels.data[index + 1] = 55 + (random() - 0.5) * 140;
+    pixels.data[index + 2] = 35 + (random() - 0.5) * 140;
+    pixels.data[index + 3] = 255;
   }
+  context.putImageData(pixels, 0, 0);
 }
 
 function drawInvalid(context: CanvasRenderingContext2D) {

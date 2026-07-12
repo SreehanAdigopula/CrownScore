@@ -40,3 +40,12 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Local ML datasets and generated training artifacts (never redistribute)
+/ml/datasets/
+/ml/data/
+/ml/checkpoints/
+/ml/.venv/
+/ml/*.onnx
+/ml/__pycache__/
+*.pyc

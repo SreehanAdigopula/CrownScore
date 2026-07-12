@@ -16,8 +16,11 @@ from __future__ import annotations
 
 import argparse
 import json
+import random
+import time
 from pathlib import Path
 
+import numpy as np
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
@@ -35,15 +38,16 @@ def build_model(pretrained: bool, unfreeze_blocks: int) -> nn.Module:
     model.classifier[-1] = nn.Linear(model.classifier[-1].in_features, len(CLASSES))
     for parameter in model.features.parameters():
         parameter.requires_grad = False
-    for block in list(model.features)[-unfreeze_blocks:]:
-        for parameter in block.parameters():
-            parameter.requires_grad = True
+    if unfreeze_blocks:
+        for block in list(model.features)[-unfreeze_blocks:]:
+            for parameter in block.parameters():
+                parameter.requires_grad = True
     return model
 
 
 def build_loaders(data_dir: Path, batch_size: int, num_workers: int) -> dict[str, DataLoader]:
     train_transform = transforms.Compose([
-        transforms.RandomResizedCrop(IMG_SIZE, scale=(0.6, 1.0)),
+        transforms.Resize((IMG_SIZE, IMG_SIZE)),
         transforms.RandomHorizontalFlip(),
         transforms.RandomRotation(20),
         transforms.ColorJitter(brightness=0.25, contrast=0.25, saturation=0.15),
@@ -51,8 +55,7 @@ def build_loaders(data_dir: Path, batch_size: int, num_workers: int) -> dict[str
         transforms.Normalize(IMAGENET_MEAN, IMAGENET_STD),
     ])
     eval_transform = transforms.Compose([
-        transforms.Resize(256),
-        transforms.CenterCrop(IMG_SIZE),
+        transforms.Resize((IMG_SIZE, IMG_SIZE)),
         transforms.ToTensor(),
         transforms.Normalize(IMAGENET_MEAN, IMAGENET_STD),
     ])
@@ -66,21 +69,28 @@ def build_loaders(data_dir: Path, batch_size: int, num_workers: int) -> dict[str
 
 
 @torch.no_grad()
-def evaluate(model: nn.Module, loader: DataLoader, device: torch.device) -> dict[str, float]:
+def evaluate(model: nn.Module, loader: DataLoader, device: torch.device, criterion: nn.Module | None = None) -> dict[str, float | list[list[int]]]:
     model.eval()
-    true_positive = false_positive = false_negative = correct = total = 0
+    true_positive = false_positive = false_negative = true_negative = correct = total = 0
+    running_loss = 0.0
     for inputs, targets in loader:
         inputs, targets = inputs.to(device), targets.to(device)
-        predictions = model(inputs).argmax(dim=1)
+        logits = model(inputs)
+        predictions = logits.argmax(dim=1)
+        if criterion is not None:
+            running_loss += criterion(logits, targets).item() * targets.numel()
         correct += int((predictions == targets).sum())
         total += targets.numel()
         true_positive += int(((predictions == 1) & (targets == 1)).sum())
         false_positive += int(((predictions == 1) & (targets == 0)).sum())
         false_negative += int(((predictions == 0) & (targets == 1)).sum())
+        true_negative += int(((predictions == 0) & (targets == 0)).sum())
     precision = true_positive / (true_positive + false_positive) if true_positive + false_positive else 0.0
     recall = true_positive / (true_positive + false_negative) if true_positive + false_negative else 0.0
     f1 = 2 * precision * recall / (precision + recall) if precision + recall else 0.0
-    return {"accuracy": correct / max(total, 1), "precision": precision, "recall": recall, "f1": f1}
+    return {"loss": running_loss / max(total, 1), "accuracy": correct / max(total, 1), "precision": precision,
+            "recall": recall, "f1": f1, "confusion_matrix": [[true_negative, false_positive], [false_negative, true_positive]],
+            "size": total, "class_balance": {"invalid": true_negative + false_positive, "valid": true_positive + false_negative}}
 
 
 def main() -> None:
@@ -94,10 +104,14 @@ def main() -> None:
     parser.add_argument("--num-workers", type=int, default=2)
     parser.add_argument("--output-dir", default=str(Path(__file__).parent / "checkpoints"))
     parser.add_argument("--no-pretrained", action="store_true", help="Skip ImageNet weights (offline smoke tests)")
+    parser.add_argument("--seed", type=int, default=42)
     args = parser.parse_args()
 
+    random.seed(args.seed)
+    np.random.seed(args.seed)
+    torch.manual_seed(args.seed)
     device = torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
-    print(f"Training on {device}")
+    print(f"Training on {device}; MPS built={torch.backends.mps.is_built()} available={torch.backends.mps.is_available()}")
 
     loaders = build_loaders(Path(args.data_dir), args.batch_size, args.num_workers)
     model = build_model(pretrained=not args.no_pretrained, unfreeze_blocks=args.unfreeze_blocks).to(device)
@@ -108,7 +122,10 @@ def main() -> None:
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     best_f1 = -1.0
+    best_epoch = 0
     epochs_without_improvement = 0
+    history = []
+    started = time.monotonic()
 
     for epoch in range(1, args.epochs + 1):
         model.train()
@@ -119,15 +136,19 @@ def main() -> None:
             loss = criterion(model(inputs), targets)
             loss.backward()
             optimizer.step()
-            running_loss += float(loss) * targets.numel()
+            running_loss += loss.item() * targets.numel()
         scheduler.step()
-        metrics = evaluate(model, loaders["val"], device)
+        train_loss = running_loss / len(loaders["train"].dataset)
+        metrics = evaluate(model, loaders["val"], device, criterion)
+        history.append({"epoch": epoch, "train_loss": train_loss, "val": metrics})
         print(f"epoch {epoch:02d}  loss {running_loss / len(loaders['train'].dataset):.4f}  "
               f"val acc {metrics['accuracy']:.3f}  val f1 {metrics['f1']:.3f}")
         if metrics["f1"] > best_f1:
             best_f1 = metrics["f1"]
+            best_epoch = epoch
             epochs_without_improvement = 0
-            torch.save({"state_dict": model.state_dict(), "classes": CLASSES, "img_size": IMG_SIZE, "val_metrics": metrics}, output_dir / "best.pt")
+            torch.save({"state_dict": model.state_dict(), "classes": CLASSES, "img_size": IMG_SIZE,
+                        "val_metrics": metrics, "best_epoch": epoch, "seed": args.seed}, output_dir / "best.pt")
         else:
             epochs_without_improvement += 1
             if epochs_without_improvement >= args.patience:
@@ -136,11 +157,13 @@ def main() -> None:
 
     checkpoint = torch.load(output_dir / "best.pt", map_location=device, weights_only=True)
     model.load_state_dict(checkpoint["state_dict"])
-    test_metrics = evaluate(model, loaders["test"], device)
+    test_metrics = evaluate(model, loaders["test"], device, criterion)
     print(f"TEST  acc {test_metrics['accuracy']:.3f}  precision {test_metrics['precision']:.3f}  "
           f"recall {test_metrics['recall']:.3f}  f1 {test_metrics['f1']:.3f}")
     with open(output_dir / "metrics.json", "w") as handle:
-        json.dump({"val": checkpoint["val_metrics"], "test": test_metrics}, handle, indent=2)
+        json.dump({"device": str(device), "batch_size": args.batch_size, "learning_rate": args.lr, "seed": args.seed,
+                   "completed_epochs": len(history), "best_epoch": best_epoch, "duration_seconds": time.monotonic() - started,
+                   "history": history, "val": checkpoint["val_metrics"], "test": test_metrics}, handle, indent=2)
     print(f"Best checkpoint: {output_dir / 'best.pt'}")
 
 

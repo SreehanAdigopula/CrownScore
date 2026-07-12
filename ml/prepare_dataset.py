@@ -26,9 +26,11 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
 import math
 import random
 from pathlib import Path
+from dataclasses import dataclass
 
 import numpy as np
 from PIL import Image, ImageDraw, ImageEnhance, ImageFilter
@@ -46,26 +48,36 @@ def load_rgb(path: Path) -> Image.Image:
     return Image.open(path).convert("RGB")
 
 
-def resize(image: Image.Image) -> Image.Image:
-    image = image.copy()
-    image.thumbnail((IMAGE_SIZE * 2, IMAGE_SIZE * 2))
-    return image.resize((IMAGE_SIZE, IMAGE_SIZE))
+GUIDE_CROP = (0.31, 0.28, 0.38, 0.30)  # x, y, width, height fractions
 
 
-def central_mask_coverage(mask: Image.Image) -> float:
-    """Fraction of the central 60% box covered by the (binary) hair mask."""
+def crop_guide_region(image: Image.Image) -> Image.Image:
+    """Match loadGuideRegion() in score-capture.ts for any source dimensions."""
+    width, height = image.size
+    left = round(width * GUIDE_CROP[0])
+    top = round(height * GUIDE_CROP[1])
+    crop_width = max(1, round(width * GUIDE_CROP[2]))
+    crop_height = max(1, round(height * GUIDE_CROP[3]))
+    return image.crop((left, top, left + crop_width, top + crop_height)).resize((IMAGE_SIZE, IMAGE_SIZE))
+
+
+def guide_mask_coverage(mask: Image.Image) -> float:
+    """Fraction of the browser guide region covered by the binary hair mask."""
     gray = np.asarray(mask.convert("L"), dtype=np.float32) / 255.0
     height, width = gray.shape
-    top, bottom = int(height * 0.2), int(height * 0.8)
-    left, right = int(width * 0.2), int(width * 0.8)
-    center = gray[top:bottom, left:right]
-    return float((center > 0.5).mean())
+    left = round(width * GUIDE_CROP[0])
+    top = round(height * GUIDE_CROP[1])
+    right = left + max(1, round(width * GUIDE_CROP[2]))
+    bottom = top + max(1, round(height * GUIDE_CROP[3]))
+    return float((gray[top:bottom, left:right] > 0.5).mean())
 
 
 def find_mask(mask_dir: Path, image_path: Path) -> Path | None:
+    source_key = image_path.stem.removesuffix("-org")
     for extension in (".pbm", ".png", ".jpg", ".bmp"):
-        for candidate in mask_dir.rglob(image_path.stem + "*" + extension):
-            return candidate
+        candidates = sorted(mask_dir.rglob(source_key + "-gt" + extension))
+        if candidates:
+            return candidates[0]
     return None
 
 
@@ -95,19 +107,8 @@ CORRUPTIONS = [corrupt_blur, corrupt_exposure, corrupt_offcenter]
 SKIN_TONES = [(201, 154, 114), (224, 172, 135), (168, 117, 82), (141, 92, 60), (98, 66, 45)]
 HAIR_COLORS = [(42, 29, 18), (20, 16, 12), (74, 48, 26), (105, 84, 60), (60, 60, 64)]
 
-# Mirrors the app's capture path (src/features/check-ins/score-capture.ts): captures are
-# 900x900 and the classifier sees the guide-region crop. Synthetic training samples must go
-# through the same crop so the training distribution matches inference.
+# Mirrors the app's capture path (src/features/check-ins/score-capture.ts).
 CAPTURE_SIZE = 900
-GUIDE_CROP = (0.31, 0.28, 0.38, 0.30)  # x, y, width, height fractions
-
-
-def crop_guide_region(image: Image.Image) -> Image.Image:
-    left = int(CAPTURE_SIZE * GUIDE_CROP[0])
-    top = int(CAPTURE_SIZE * GUIDE_CROP[1])
-    width = int(CAPTURE_SIZE * GUIDE_CROP[2])
-    height = int(CAPTURE_SIZE * GUIDE_CROP[3])
-    return image.crop((left, top, left + width, top + height)).resize((IMAGE_SIZE, IMAGE_SIZE))
 
 
 def synth_valid(rng: random.Random) -> Image.Image:
@@ -152,43 +153,65 @@ def synth_invalid(rng: random.Random) -> Image.Image:
 
 # ── Assembly ──────────────────────────────────────────────────────────────────
 
-def collect_real(args: argparse.Namespace, rng: random.Random) -> tuple[list[Image.Image], list[Image.Image]]:
-    valid: list[Image.Image] = []
-    invalid: list[Image.Image] = []
+@dataclass
+class SourceSample:
+    source_id: str
+    valid: Image.Image
+    invalid: Image.Image
+
+
+def collect_real(args: argparse.Namespace, rng: random.Random) -> tuple[list[SourceSample], list[Image.Image], dict[str, int]]:
+    samples: list[SourceSample] = []
+    external_invalid: list[Image.Image] = []
+    stats = {"images": 0, "paired": 0, "missing_mask": 0, "unreadable": 0, "duplicate_image": 0, "low_coverage": 0}
+    seen_images: set[str] = set()
     for images_arg, masks_arg in ((args.figaro_images, args.figaro_masks), (args.celeba_images, args.celeba_masks)):
         if not images_arg:
             continue
         images_dir, masks_dir = Path(images_arg), Path(masks_arg)
         for image_path in list_images(images_dir):
+            stats["images"] += 1
+            digest = hashlib.sha256(image_path.read_bytes()).hexdigest()
+            if digest in seen_images:
+                stats["duplicate_image"] += 1
+                continue
+            seen_images.add(digest)
             mask_path = find_mask(masks_dir, image_path)
             if mask_path is None:
+                stats["missing_mask"] += 1
                 continue
-            image = resize(load_rgb(image_path))
-            if central_mask_coverage(Image.open(mask_path)) >= args.min_coverage:
-                valid.append(image)
+            try:
+                image = load_rgb(image_path)
+                with Image.open(mask_path) as mask:
+                    coverage = guide_mask_coverage(mask)
+                stats["paired"] += 1
+            except (OSError, ValueError):
+                stats["unreadable"] += 1
+                continue
+            if coverage < args.min_coverage:
+                stats["low_coverage"] += 1
+                continue
+            valid = crop_guide_region(image)
+            samples.append(SourceSample(str(image_path.relative_to(images_dir)), valid, rng.choice(CORRUPTIONS)(valid, rng)))
     if args.negatives:
         for image_path in list_images(Path(args.negatives)):
-            invalid.append(resize(load_rgb(image_path)))
-    for source in rng.sample(valid, k=min(len(valid), max(1, len(valid) // 2))):
-        invalid.append(rng.choice(CORRUPTIONS)(source, rng))
-    return valid, invalid
+            try:
+                external_invalid.append(crop_guide_region(load_rgb(image_path)))
+            except (OSError, ValueError):
+                stats["unreadable"] += 1
+    return samples, external_invalid, stats
 
 
 def collect_synthetic(count: int, rng: random.Random) -> tuple[list[Image.Image], list[Image.Image]]:
     return [synth_valid(rng) for _ in range(count)], [synth_invalid(rng) for _ in range(count)]
 
 
-def write_split(output: Path, label: str, images: list[Image.Image], rng: random.Random, manifest: list[tuple[str, str, str]]) -> None:
-    rng.shuffle(images)
-    cursor = 0
-    for split_name, fraction in SPLITS:
-        take = len(images) - cursor if split_name == SPLITS[-1][0] else max(1, round(len(images) * fraction))
-        for index, image in enumerate(images[cursor:cursor + take]):
-            destination = output / split_name / label / f"{label}_{cursor + index:05d}.jpg"
-            destination.parent.mkdir(parents=True, exist_ok=True)
-            image.save(destination, quality=90)
-            manifest.append((split_name, label, str(destination)))
-        cursor += take
+def save_image(output: Path, split: str, label: str, index: int, image: Image.Image,
+               source_id: str, manifest: list[tuple[str, str, str, str]]) -> None:
+    destination = output / split / label / f"{label}_{index:05d}.jpg"
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    image.save(destination, quality=90)
+    manifest.append((split, label, source_id, str(destination)))
 
 
 def main() -> None:
@@ -207,23 +230,42 @@ def main() -> None:
     rng = random.Random(args.seed)
     if args.synthetic:
         valid, invalid = collect_synthetic(args.synthetic, rng)
+        samples = [SourceSample(f"synthetic_{i:05d}", good, bad) for i, (good, bad) in enumerate(zip(valid, invalid))]
+        external_invalid: list[Image.Image] = []
+        stats = {"images": len(samples), "paired": len(samples), "missing_mask": 0, "unreadable": 0, "duplicate_image": 0, "low_coverage": 0}
     else:
         if not (args.figaro_images and args.figaro_masks):
             parser.error("Provide --figaro-images/--figaro-masks (and optionally --celeba-*, --negatives), or use --synthetic N")
-        valid, invalid = collect_real(args, rng)
+        samples, external_invalid, stats = collect_real(args, rng)
 
-    if len(valid) < 10 or len(invalid) < 10:
-        raise SystemExit(f"Not enough samples (valid={len(valid)}, invalid={len(invalid)}); need at least 10 per class.")
+    if len(samples) < 10:
+        raise SystemExit(f"Not enough usable source pairs ({len(samples)}); need at least 10.")
 
     output = Path(args.output)
-    manifest: list[tuple[str, str, str]] = []
-    write_split(output, "valid", valid, rng, manifest)
-    write_split(output, "invalid", invalid, rng, manifest)
+    manifest: list[tuple[str, str, str, str]] = []
+    rng.shuffle(samples)
+    rng.shuffle(external_invalid)
+    cursor = external_cursor = 0
+    split_counts: dict[str, dict[str, int]] = {}
+    for split_index, (split, fraction) in enumerate(SPLITS):
+        take = len(samples) - cursor if split_index == len(SPLITS) - 1 else round(len(samples) * fraction)
+        external_take = len(external_invalid) - external_cursor if split_index == len(SPLITS) - 1 else round(len(external_invalid) * fraction)
+        selected = samples[cursor:cursor + take]
+        selected_external = external_invalid[external_cursor:external_cursor + external_take]
+        for index, sample in enumerate(selected):
+            save_image(output, split, "valid", index, sample.valid, sample.source_id, manifest)
+            save_image(output, split, "invalid", index, sample.invalid, sample.source_id, manifest)
+        for offset, image in enumerate(selected_external, start=len(selected)):
+            save_image(output, split, "invalid", offset, image, f"external_{external_cursor + offset}", manifest)
+        split_counts[split] = {"valid": len(selected), "invalid": len(selected) + len(selected_external)}
+        cursor += take
+        external_cursor += external_take
     with open(output / "manifest.csv", "w", newline="") as handle:
         writer = csv.writer(handle)
-        writer.writerow(["split", "label", "path"])
+        writer.writerow(["split", "label", "source_id", "path"])
         writer.writerows(manifest)
-    print(f"Wrote {len(manifest)} images to {output} (valid={len(valid)}, invalid={len(invalid)})")
+    print(f"Source audit: {stats}")
+    print(f"Wrote {len(manifest)} images to {output}; splits={split_counts}; seed={args.seed}")
 
 
 if __name__ == "__main__":
