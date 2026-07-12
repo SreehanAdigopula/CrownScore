@@ -3,7 +3,16 @@ import type { HealthClass, HealthDetection, ImageQualityInput } from "@/server/a
 import { HEALTH_MODEL_CLASSES, intersectionOverUnion } from "@/server/analysis/visible-health-scoring";
 import { loadCapture } from "@/features/check-ins/score-capture";
 
-const MODEL_URL = "/models/hair-health-detector.onnx", INPUT_SIZE = 640, CONFIDENCE_THRESHOLD = 0.2;
+const MODEL_URL = "/models/hair-health-detector.onnx", INPUT_SIZE = 640, CONFIDENCE_THRESHOLD = 0.2, SESSION_TIMEOUT_MS = 30000, INFERENCE_TIMEOUT_MS = 30000;
+
+function withTimeout<T>(promise: Promise<T>, ms: number, message: string): Promise<T> {
+  let timeoutId: ReturnType<typeof setTimeout>;
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error(message)), ms);
+  });
+  return Promise.race([promise, timeoutPromise]).finally(() => clearTimeout(timeoutId));
+}
+
 let sessionPromise: Promise<import("onnxruntime-web").InferenceSession> | null = null;
 async function getSession() {
   if (!sessionPromise) {
@@ -11,7 +20,11 @@ async function getSession() {
       try {
         const ort = await import("onnxruntime-web");
         ort.env.wasm.wasmPaths = "/ort/";
-        return ort.InferenceSession.create(MODEL_URL, { executionProviders: ["wasm"], graphOptimizationLevel: "all" });
+        return await withTimeout(
+          ort.InferenceSession.create(MODEL_URL, { executionProviders: ["wasm"], graphOptimizationLevel: "all" }),
+          SESSION_TIMEOUT_MS,
+          "Model loading timed out. Please refresh the page and try again."
+        );
       } catch (error) {
         sessionPromise = null;
         throw error;
@@ -46,7 +59,11 @@ async function runInference(dataUrl: string): Promise<{ detections: HealthDetect
   context.fillStyle = "rgb(114,114,114)"; context.fillRect(0, 0, INPUT_SIZE, INPUT_SIZE); context.drawImage(source, padX, padY, resizedWidth, resizedHeight);
   const rgba = context.getImageData(0, 0, INPUT_SIZE, INPUT_SIZE).data, input = new Float32Array(3 * INPUT_SIZE * INPUT_SIZE), plane = INPUT_SIZE * INPUT_SIZE;
   for (let index = 0; index < plane; index += 1) { input[index] = rgba[index * 4] / 255; input[plane + index] = rgba[index * 4 + 1] / 255; input[plane * 2 + index] = rgba[index * 4 + 2] / 255; }
-  const ort = await import("onnxruntime-web"), session = await getSession(), output = (await session.run({ [session.inputNames[0]]: new ort.Tensor("float32", input, [1, 3, INPUT_SIZE, INPUT_SIZE]) }))[session.outputNames[0]], values = output.data as Float32Array;
+  const ort = await import("onnxruntime-web"), session = await getSession(), output = (await withTimeout(
+    session.run({ [session.inputNames[0]]: new ort.Tensor("float32", input, [1, 3, INPUT_SIZE, INPUT_SIZE]) }),
+    INFERENCE_TIMEOUT_MS,
+    "Analysis timed out. Please try again."
+  ))[session.outputNames[0]], values = output.data as Float32Array;
   const channels = 4 + HEALTH_MODEL_CLASSES.length, candidates = values.length / channels, detections: HealthDetection[] = [];
   for (let candidate = 0; candidate < candidates; candidate += 1) { let bestClass = 0, confidence = 0; for (let classIndex = 0; classIndex < HEALTH_MODEL_CLASSES.length; classIndex += 1) { const value = values[(4 + classIndex) * candidates + candidate]; if (value > confidence) { confidence = value; bestClass = classIndex; } } if (confidence < CONFIDENCE_THRESHOLD) continue;
     const centerX = values[candidate], centerY = values[candidates + candidate], width = values[candidates * 2 + candidate], height = values[candidates * 3 + candidate], x = Math.max(0, (centerX - width / 2 - padX) / scale), y = Math.max(0, (centerY - height / 2 - padY) / scale);
