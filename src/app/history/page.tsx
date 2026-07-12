@@ -15,7 +15,7 @@ export default function HistoryPage() {
       <div className="mx-auto max-w-5xl p-4 lg:p-10">
         <div className="mb-8">
           <h1 className="font-heading text-3xl font-extrabold tracking-tight">Check-in history</h1>
-          <p className="mt-2 text-sm text-muted-foreground">Only check-ins you actually capture in this browser appear here.</p>
+          <p className="mt-2 text-sm text-muted-foreground">Your authenticated check-ins stay available across devices.</p>
         </div>
         {!ready ? (
           <div className="space-y-3">
@@ -34,7 +34,7 @@ export default function HistoryPage() {
             </p>
             <Link
               href="/check-in/capture"
-              className="mt-8 inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-primary px-5 text-sm font-extrabold text-primary-foreground shadow-[5px_5px_10px_rgb(163,177,198,0.6),-5px_-5px_10px_rgba(255,255,255,0.5)] neu-focus"
+              className="mt-8 inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl px-5 text-sm font-extrabold text-primary-foreground gradient-primary neu-focus"
             >
               <Camera className="size-4" />
               Take first photo
@@ -48,7 +48,7 @@ export default function HistoryPage() {
                 <Link
                   href={`/history/${point.id}`}
                   key={point.id}
-                  className="grid grid-cols-[auto_1fr_auto_auto] items-center gap-4 px-5 py-5 transition hover:bg-[#d8dee7] neu-focus"
+                  className="grid grid-cols-[auto_1fr_auto_auto] items-center gap-4 px-5 py-5 transition hover:bg-muted/70 neu-focus"
                 >
                   <div className="neu-inset grid size-14 shrink-0 place-items-center overflow-hidden rounded-[22px] text-muted-foreground">
                     {record.preview ? (

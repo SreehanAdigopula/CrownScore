@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Check } from "lucide-react";
+import { Check, Cpu } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
 import { analyzeHealthCapture } from "@/features/check-ins/hair-health-detector";
@@ -20,7 +20,7 @@ import {
 
 const stages = [
   "Checking image quality",
-  "Finding visible concerns",
+  "Running on-device YOLOv8n",
   "Removing duplicate detections",
   "Calculating visible-health score",
   "Preparing your summary",
@@ -70,7 +70,11 @@ export default function AnalyzingPage() {
 
         const record = { ...result.data, preview };
         sessionStorage.setItem(RESULT_KEY, JSON.stringify(record));
-        saveStoredCheckIn(record);
+        try {
+          saveStoredCheckIn(record);
+        } catch {
+          // The server has already persisted the derived result; local cache is optional.
+        }
         router.replace(`/check-in/result/${result.data.analysis.id}`);
       } catch (err) {
         clearInterval(ticker);
@@ -85,19 +89,33 @@ export default function AnalyzingPage() {
     };
   }, [router, attempt]);
 
+  const progress = Math.round(((active + 1) / stages.length) * 100);
+
   return (
     <AppShell title="Analyzing">
       <div className="mx-auto flex min-h-[calc(100dvh-5rem)] max-w-xl items-center p-5">
         <section className="w-full">
-          <div className="neu-inset relative mx-auto mb-10 grid size-28 place-items-center rounded-[36px] text-primary">
-            {!error && <div className="size-14 animate-spin rounded-full border-2 border-primary border-t-transparent" />}
-            <span className="absolute font-mono text-sm font-semibold">{error ? "!" : `${Math.round(((active + 1) / stages.length) * 100)}%`}</span>
+          <div className="relative mx-auto mb-10 grid size-32 place-items-center">
+            <div
+              className="absolute inset-0 rounded-full score-ring shadow-[0_20px_50px_rgb(0,82,255,0.2)]"
+              style={{ ["--score-angle" as string]: `${(progress / 100) * 360}deg` }}
+            />
+            <div className="relative z-10 flex flex-col items-center">
+              {!error ? (
+                <Cpu className="size-6 text-primary" />
+              ) : (
+                <span className="font-mono text-lg font-semibold text-[#b42318]">!</span>
+              )}
+              <span className="mt-2 font-mono text-sm font-semibold">{error ? "Error" : `${progress}%`}</span>
+            </div>
           </div>
-          <h1 className="text-center font-heading text-3xl font-extrabold tracking-tight">
-            {error ? "Analysis could not finish" : "Reviewing visible hair and scalp health"}
+          <h1 className="text-center font-heading text-3xl tracking-tight">
+            {error ? "Analysis could not finish" : "Scoring visible hair and scalp health"}
           </h1>
           <p className="mt-3 text-center text-sm text-muted-foreground">
-            {error ? "Nothing was saved. Retake the photo or try analyzing again." : "This is a non-diagnostic visual check from one image."}
+            {error
+              ? "Nothing was saved. Retake the photo or try analyzing again."
+              : "On-device detections feed a deterministic score. This is not a diagnosis."}
           </p>
           {error ? (
             <div className="mt-8 space-y-4">
@@ -122,8 +140,17 @@ export default function AnalyzingPage() {
           ) : (
             <div className="glass-panel mt-8 rounded-[32px] p-5">
               {stages.map((stage, index) => (
-                <div key={stage} className={`flex items-center gap-3 py-3 text-sm font-bold ${index > active ? "text-muted-foreground" : "text-foreground"}`}>
-                  <span className={`grid size-7 place-items-center rounded-full ${index < active ? "bg-primary text-primary-foreground" : "neu-inset text-primary"}`}>
+                <div
+                  key={stage}
+                  className={`flex items-center gap-3 py-3 text-sm font-bold transition ${
+                    index > active ? "text-muted-foreground" : "text-foreground"
+                  }`}
+                >
+                  <span
+                    className={`grid size-7 place-items-center rounded-full ${
+                      index < active ? "bg-primary text-primary-foreground" : "neu-inset text-primary"
+                    }`}
+                  >
                     {index < active ? <Check className="size-3" /> : <span className="text-[10px]">{index + 1}</span>}
                   </span>
                   {stage}

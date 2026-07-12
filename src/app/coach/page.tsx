@@ -46,7 +46,7 @@ export default function CoachPage() {
               </p>
               <Link
                 href="/check-in/capture"
-                className="mt-7 inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-primary px-5 text-sm font-extrabold text-primary-foreground shadow-[5px_5px_10px_rgb(163,177,198,0.6),-5px_-5px_10px_rgba(255,255,255,0.5)] neu-focus"
+                className="mt-7 inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl px-5 text-sm font-extrabold text-primary-foreground gradient-primary neu-focus"
               >
                 <Camera className="size-4" />
                 Start check-in

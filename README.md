@@ -1,54 +1,53 @@
 # CrownScore
 
-CrownScore is a mobile-first tracker that summarizes model-detected visible hair and scalp concerns from consistent photos.
+**Visible hair and scalp progress from one guided photo — scored carefully, never diagnosed.**
 
-CrownScore is not a diagnostic product. Its 0–100 visible-health score is not a clinical measurement and does not replace a qualified professional.
+CrownScore turns a consistent crown/scalp check-in into a 0–100 visible-health score using on-device YOLOv8n detection, deterministic scoring, fixed safety rules, and an educational coach that cannot override the facts.
 
-## What is built
+It is **not** a medical device. Scores summarize model-detected visible concerns in one image. They are not clinical measurements and do not replace a qualified professional.
 
-- Next.js App Router frontend with CrownScore branding and Soft UI styling
-- Empty first-run dashboard, history, progress, and coach states
-- Guided camera capture and questionnaire flow
-- YOLOv8n browser inference, visible-health scoring, image-quality checks, and deterministic safety rules
-- Optional Groq coach provider with timeout, Zod validation, and automatic mock fallback
-- Firebase client/admin adapters plus Firestore and Storage rules
-- Local guest fallback when Firebase public config is not present
+## Why it exists
+
+People tracking minoxidil, finasteride, or general hair-care routines often rely on memory and uneven bathroom selfies. CrownScore adds a guided capture loop, a comparable score, and a clear disclaimer boundary so progress is easier to review without pretending to diagnose.
+
+## What judges should notice
+
+| Criterion | Where it shows up |
+| --- | --- |
+| **Creativity** | Niche progress tool with a safety-first framing, not a generic chatbot skin |
+| **Practicality** | Neon-backed accounts keep check-ins available across devices |
+| **Design** | Brand-first landing, score orb, soft cool atmosphere, mobile bottom nav |
+| **Technical complexity** | Browser ONNX YOLO, quality heuristics, class-aware NMS, deterministic score, coach firewall |
+| **Presentation** | Follow [DEMO_SCRIPT.md](./DEMO_SCRIPT.md) for a 2–5 minute walkthrough |
+
+## Product loop
+
+1. **Onboarding** — routine, check-in rhythm, coach tone
+2. **Guided capture** — fixed oval guide, countdown, quality-minded framing
+3. **Context** — optional adherence / shedding / irritation for safety review
+4. **Analyze** — on-device detections → API score + coach summary
+5. **Result → Dashboard / History / Progress / Coach** — only real check-ins populate data
+
+## Stack
+
+- Next.js App Router + React 19 + Tailwind
+- ONNX Runtime Web + YOLOv8n (browser)
+- Zod-validated analyze API, deterministic safety service
+- Optional Groq coach with mock fallback
+- Neon Auth + Neon Postgres through the existing Vercel Marketplace integration
+- Drizzle ORM with tracked, forward-only migrations
+- Idempotent one-time import of existing browser-only records after sign-in
 
 ## Local development
 
 ```bash
 npm install
+npx vercel env pull .env.local --environment=production
+npm run db:migrate
 npm run dev
 ```
 
-Open `http://localhost:3000`. With no Firebase or Groq values, CrownScore still runs locally using browser-local records and the deterministic mock coach. Camera access requires `localhost` or HTTPS.
-
-## First-run data behavior
-
-New users start with zero records:
-
-- Dashboard shows no visible-health score yet
-- History shows no saved photos
-- Progress shows no chart
-- Coach shows no summary
-
-After a usable captured check-in, CrownScore saves the visible-health score, concerns, uncertainty, and quality notes locally.
-
-## Firebase setup
-
-1. Create a Firebase project and web app.
-2. Add the `NEXT_PUBLIC_FIREBASE_*` values to `.env.local` for local development.
-3. Add the same public values to Vercel Project Settings for deployment.
-4. For server-side Firebase Admin, provide either application default credentials or the service-account values in `.env.example`.
-5. Deploy `firestore.rules` and `storage.rules` with the Firebase CLI.
-
-Do not commit real API keys, private keys, or service account JSON to GitHub.
-
-## Groq
-
-Set `GROQ_API_KEY` and optionally `GROQ_MODEL`. If the key is missing, the call times out, the provider rate-limits, or its JSON is invalid, `MockCoachProvider` returns a deterministic educational summary. AI failure never blocks a scan result.
-
-## Useful scripts
+Open `http://localhost:3000`. Camera needs `localhost` or HTTPS. Neon Auth requires `DATABASE_URL`, `NEON_AUTH_BASE_URL`, and a 32+ character `NEON_AUTH_COOKIE_SECRET`. Groq remains optional.
 
 ```bash
 npm run lint
@@ -57,8 +56,29 @@ npm test
 npm run build
 ```
 
-## Deploy to Vercel
+## Environment
 
-Import the repository into Vercel, add the variables from `.env.example`, and deploy as a Next.js project. Keep secrets in Vercel environment variables, not in source control.
+Copy `.env.example` → `.env.local`. Keep secrets out of GitHub and use Vercel project env for deploys.
 
-See [ARCHITECTURE.md](./ARCHITECTURE.md), [API.md](./API.md), [DEMO_SCRIPT.md](./DEMO_SCRIPT.md), and [KNOWN_LIMITATIONS.md](./KNOWN_LIMITATIONS.md).
+- `DATABASE_URL` — pooled Neon Postgres connection
+- `NEON_AUTH_BASE_URL` — existing branch-scoped Neon Auth URL
+- `NEON_AUTH_COOKIE_SECRET` — server-only signed-session cookie secret
+- `GROQ_API_KEY` — optional coach; mock fallback otherwise
+- `INTERNAL_FIXTURES_ENABLED` — leave false in production
+
+Raw captures are processed in the browser and are not uploaded. Neon stores the
+derived analysis, questionnaire context, coach output, preferences, and account
+ownership metadata. Local thumbnails are a disposable browser cache.
+
+## Docs
+
+- [ARCHITECTURE.md](./ARCHITECTURE.md) — analysis pipeline
+- [API.md](./API.md) — routes
+- [DEMO_SCRIPT.md](./DEMO_SCRIPT.md) — judge / video walkthrough
+- [KNOWN_LIMITATIONS.md](./KNOWN_LIMITATIONS.md) — dataset and safety honesty
+
+## United Hacks V7
+
+Built for the **General** track: originality, working demo, clear design, and technical depth that is visible in the product — not buried in a README alone.
+
+The official [United Hacks V7 page](https://unitedhacksv7.devpost.com/) lists five equally visible judging dimensions: creativity, practicality, presentation, design, and technical complexity. It requires a public repository, a 2–5 minute demo video, and a written Devpost explanation; a live demo is optional but recommended.

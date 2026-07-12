@@ -39,21 +39,26 @@ export function saveStoredCheckIn(record: StoredCheckIn) {
   const slim = slimForStorage(record);
   const existing = getStoredCheckIns().filter((item) => item.analysis.id !== slim.analysis.id);
   const next = [...existing, slim].sort((a, b) => new Date(a.analysis.capturedAt).getTime() - new Date(b.analysis.capturedAt).getTime());
-  /* localStorage quota is ~5MB; if a save fails, shed the oldest photo previews first and keep the
-     analysis history intact rather than losing the whole check-in. */
+  /* localStorage quota is limited. Shed old previews first, then the oldest records, while always
+     preserving the check-in the person just completed. */
   let attempt = [...next];
-  for (let round = 0; round <= attempt.length; round += 1) {
+  while (attempt.length > 0) {
     try {
       localStorage.setItem(CHECK_INS_KEY, JSON.stringify(attempt));
-      break;
+      window.dispatchEvent(new CustomEvent("crownscore:check-ins", { detail: attempt }));
+      return attempt;
     } catch {
       const oldestWithPreview = attempt.find((item) => item.preview);
-      if (!oldestWithPreview) break;
-      attempt = attempt.map((item) => (item === oldestWithPreview ? { ...item, preview: null } : item));
+      if (oldestWithPreview) {
+        attempt = attempt.map((item) => (item === oldestWithPreview ? { ...item, preview: null } : item));
+      } else if (attempt.length > 1) {
+        attempt = attempt.slice(1);
+      } else {
+        break;
+      }
     }
   }
-  window.dispatchEvent(new CustomEvent("crownscore:check-ins", { detail: attempt }));
-  return attempt;
+  throw new Error("This browser could not save the check-in. Free some storage and try again.");
 }
 
 export type OnboardingPrefs = {

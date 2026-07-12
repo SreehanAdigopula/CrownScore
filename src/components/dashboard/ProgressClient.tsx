@@ -23,12 +23,13 @@ export function ProgressClient() {
     );
   }
 
-  const history = records.map(toProgressPoint);
-  const first = history[0];
-  const latest = history.at(-1);
+  const scoredRecords = records.filter((record) => record.analysis.healthScore != null);
+  const scoredHistory = scoredRecords.map(toProgressPoint);
+  const first = scoredHistory[0];
+  const latest = scoredHistory.at(-1);
   const change = first?.healthScore != null && latest?.healthScore != null ? latest.healthScore - first.healthScore : null;
-  const firstRecord = records[0];
-  const latestRecord = records.at(-1);
+  const firstRecord = scoredRecords[0];
+  const latestRecord = scoredRecords.at(-1);
 
   if (!latest) {
     return (
@@ -43,7 +44,7 @@ export function ProgressClient() {
           </p>
           <Link
             href="/check-in/capture"
-            className="mt-8 inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-primary px-5 text-sm font-extrabold text-primary-foreground shadow-[5px_5px_10px_rgb(163,177,198,0.6),-5px_-5px_10px_rgba(255,255,255,0.5)] neu-focus"
+            className="mt-8 inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl px-5 text-sm font-extrabold text-primary-foreground gradient-primary neu-focus"
           >
             <Camera className="size-4" />
             Start check-in
@@ -59,9 +60,9 @@ export function ProgressClient() {
         <div className="neu-surface-lg rounded-[32px] p-6 sm:p-8">
           <h2 className="font-heading text-xl font-extrabold tracking-tight">Visible-health score history</h2>
           <p className="mt-1 text-sm text-muted-foreground">Each score comes only from visible concerns detected in that image.</p>
-          {history.length > 1 ? (
+          {scoredHistory.length > 1 ? (
             <div className="mt-6">
-              <TrendChart data={history} />
+              <TrendChart data={scoredHistory} />
             </div>
           ) : (
             <div className="neu-inset-deep mt-6 grid h-72 place-items-center rounded-[28px] p-6 text-center text-sm text-muted-foreground">
@@ -76,8 +77,8 @@ export function ProgressClient() {
           </article>
           <article className="neu-surface rounded-[32px] p-6">
             <p className="text-sm font-bold text-muted-foreground">Reliable history</p>
-            <p className="metric-number mt-4">{history.length}</p>
-            <p className="mt-2 text-xs text-muted-foreground">quality-approved check-ins</p>
+            <p className="metric-number mt-4">{scoredHistory.length}</p>
+            <p className="mt-2 text-xs text-muted-foreground">scored check-ins</p>
           </article>
         </div>
       </section>
@@ -93,15 +94,15 @@ export function ProgressClient() {
             )}
           </div>
           <div className="grid place-items-center p-6 text-center">
-            {history.length > 1 && latestRecord?.preview ? (
+            {scoredHistory.length > 1 && latestRecord?.preview ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={latestRecord.preview} alt="Latest check-in preview" className="max-h-56 w-full rounded-2xl object-cover" />
             ) : (
-              <span className="text-sm font-bold text-muted-foreground">{history.length > 1 ? "Latest preview unavailable" : "Waiting for second photo"}</span>
+              <span className="text-sm font-bold text-muted-foreground">{scoredHistory.length > 1 ? "Latest preview unavailable" : "Waiting for second scored photo"}</span>
             )}
           </div>
         </div>
-        <p className="mt-3 text-xs text-muted-foreground">Local thumbnails from this browser. Firebase Storage can hold production originals when credentials are configured.</p>
+        <p className="mt-3 text-xs text-muted-foreground">Thumbnails are an optional local cache. Raw captures are never uploaded; derived results sync through Neon.</p>
       </section>
     </div>
   );

@@ -1,14 +1,13 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { z } from "zod";
-import { fixturesEnabled } from "@/server/firebase/api-auth";
 import { createDemoDashboard } from "@/server/demo/demo-data";
 import type { ApiResponse } from "@/server/domain/types";
 
 const schema = z.object({ scenario: z.enum(["healthy", "shedding", "adherence", "safety"]).default("healthy") });
 
 export async function POST(request: Request) {
-  if (!fixturesEnabled()) {
+  if (process.env.INTERNAL_FIXTURES_ENABLED !== "true") {
     return NextResponse.json<ApiResponse<never>>({ success: false, error: { code: "FIXTURES_DISABLED", message: "Internal fixtures are disabled." } }, { status: 403 });
   }
 

@@ -30,28 +30,46 @@ export default function OnboardingPage() {
   const [startDate, setStartDate] = useState(new Date().toISOString().slice(0, 10));
   const [rhythm, setRhythm] = useState<(typeof rhythmOptions)[number]>("Every week");
   const [coachStyle, setCoachStyle] = useState<(typeof coachOptions)[number][0]>("Supportive");
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const steps = ["Your routine", "Check-in rhythm", "Coach style"];
 
-  const goNext = () => {
+  const goNext = async () => {
     if (step < 2) {
       setStep((current) => current + 1);
       return;
     }
 
-    localStorage.setItem(ONBOARDING_KEY, JSON.stringify({
+    const preferences = {
       treatment,
       startDate,
       rhythm,
       checkInFrequency: rhythm === "Every week" ? "WEEKLY" : rhythm === "Every 2 weeks" ? "BIWEEKLY" : rhythm === "Every month" ? "MONTHLY" : "MANUAL",
-      coachStyle,
-    }));
-    router.push("/dashboard");
+      coachStyle: coachStyle.toUpperCase(),
+    };
+    setSaving(true);
+    setSaveError(null);
+    try {
+      const response = await fetch("/api/preferences", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...preferences, onboardingCompleted: true }),
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) throw new Error(result.error?.message ?? "Preferences could not be saved.");
+      localStorage.setItem(ONBOARDING_KEY, JSON.stringify(preferences));
+      router.push("/dashboard");
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : "Preferences could not be saved.");
+      setSaving(false);
+    }
   };
 
   return (
-    <main className="mx-auto flex min-h-[100dvh] w-full max-w-2xl flex-col px-5 py-8">
-      <div className="flex items-center justify-between">
-        <span className="flex items-center gap-2 font-heading font-extrabold tracking-tight">
+    <main className="relative mx-auto flex min-h-[100dvh] w-full max-w-2xl flex-col px-5 py-8">
+      <div className="atmosphere-grain fixed inset-0 opacity-30" aria-hidden />
+      <div className="relative z-10 flex items-center justify-between">
+        <span className="flex items-center gap-2 font-heading text-lg tracking-tight">
           <span className="grid size-9 place-items-center rounded-2xl gradient-primary shadow-[0_12px_26px_rgb(0,82,255,0.2)]">
             <Crown className="size-4" />
           </span>
@@ -59,7 +77,7 @@ export default function OnboardingPage() {
         </span>
         <span className="text-xs font-bold text-muted-foreground">{step + 1} of 3</span>
       </div>
-      <div className="mt-8 flex gap-2">
+      <div className="relative z-10 mt-8 flex gap-2">
         {steps.map((label, index) => (
           <div key={label} className="flex-1">
             <div className={`h-2 rounded-full ${index <= step ? "gradient-primary" : "bg-muted"}`} />
@@ -67,8 +85,8 @@ export default function OnboardingPage() {
           </div>
         ))}
       </div>
-      <section className="glass-panel my-auto rounded-[32px] p-6 sm:p-8">
-        <h1 className="font-heading text-3xl font-extrabold tracking-tight">
+      <section className="glass-panel relative z-10 my-auto rounded-[32px] p-6 sm:p-8">
+        <h1 className="font-heading text-3xl tracking-tight">
           {step === 0 ? "What are you tracking?" : step === 1 ? "Build a consistent rhythm." : "How should your coach sound?"}
         </h1>
         <p className="mt-3 text-sm leading-6 text-muted-foreground">
@@ -138,14 +156,15 @@ export default function OnboardingPage() {
             })}
           </div>
         )}
-        <Button className="mt-8 h-12 w-full" onClick={goNext}>
-          {step < 2 ? "Continue" : "Open my dashboard"}
+        {saveError && <p className="mt-5 text-sm font-bold text-destructive">{saveError}</p>}
+        <Button className="mt-8 h-12 w-full" onClick={() => void goNext()} disabled={saving}>
+          {step < 2 ? "Continue" : saving ? "Saving securely…" : "Open my dashboard"}
           <ArrowRight />
         </Button>
       </section>
-      <p className="flex items-center justify-center gap-2 text-center text-xs text-muted-foreground">
+      <p className="relative z-10 flex items-center justify-center gap-2 text-center text-xs text-muted-foreground">
         <LockKeyhole className="size-3" />
-        Anonymous guest session. You can delete browser data at any time.
+        Your preferences sync securely to your CrownScore account.
       </p>
     </main>
   );

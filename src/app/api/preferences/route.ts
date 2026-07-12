@@ -1,41 +1,63 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { requireApiAuth } from "@/server/firebase/api-auth";
+import { requireUser, UnauthorizedError } from "@/server/auth/require-user";
+import { NeonUserRepository } from "@/server/repositories/neon-user-repository";
 import type { ApiResponse } from "@/server/domain/types";
 
 const schema = z.object({
   treatment: z.enum(["MINOXIDIL", "FINASTERIDE", "GENERAL", "MONITORING"]).optional(),
   coachStyle: z.enum(["SUPPORTIVE", "DIRECT", "SCIENTIFIC", "MINIMAL"]).optional(),
   checkInFrequency: z.enum(["WEEKLY", "BIWEEKLY", "MONTHLY", "MANUAL"]).optional(),
+  startDate: z.string().date().nullable().optional(),
+  theme: z.enum(["light", "dark"]).optional(),
+  onboardingCompleted: z.boolean().optional(),
 });
 
-export async function GET(request: Request) {
-  const unauthorized = await requireApiAuth(request);
-  if (unauthorized) return unauthorized;
-  return NextResponse.json({
-    success: true,
-    data: { treatment: "MINOXIDIL", coachStyle: "SUPPORTIVE", checkInFrequency: "WEEKLY", source: "DEMO_DEFAULT" },
-  });
+export async function GET() {
+  try {
+    const user = await requireUser();
+    const profile = await new NeonUserRepository().getProfile(user);
+    return NextResponse.json({ success: true, data: profile });
+  } catch (error) {
+    const unauthorized = error instanceof UnauthorizedError;
+    return NextResponse.json<ApiResponse<never>>(
+      { success: false, error: { code: unauthorized ? "UNAUTHORIZED" : "PROFILE_READ_FAILED", message: unauthorized ? "Sign in to view preferences." : "Preferences could not be loaded." } },
+      { status: unauthorized ? 401 : 500 },
+    );
+  }
 }
 
 export async function PATCH(request: Request) {
-  const unauthorized = await requireApiAuth(request);
-  if (unauthorized) return unauthorized;
-
-  let body: unknown;
   try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json<ApiResponse<never>>({ success: false, error: { code: "INVALID_JSON", message: "The request body is not valid JSON." } }, { status: 400 });
-  }
-
-  const parsed = schema.safeParse(body);
-  if (!parsed.success) {
+    const user = await requireUser();
+    const parsed = schema.safeParse(await request.json());
+    if (!parsed.success) {
+      return NextResponse.json<ApiResponse<never>>(
+        { success: false, error: { code: "INVALID_PREFERENCES", message: "Preferences were invalid.", details: parsed.error.issues } },
+        { status: 400 },
+      );
+    }
+    const profile = await new NeonUserRepository().updateProfile(user, parsed.data);
+    return NextResponse.json({ success: true, data: profile });
+  } catch (error) {
+    const unauthorized = error instanceof UnauthorizedError;
     return NextResponse.json<ApiResponse<never>>(
-      { success: false, error: { code: "INVALID_PREFERENCES", message: "Preferences were invalid.", details: parsed.error.issues } },
-      { status: 400 },
+      { success: false, error: { code: unauthorized ? "UNAUTHORIZED" : "PROFILE_SAVE_FAILED", message: unauthorized ? "Sign in to save preferences." : "Preferences could not be saved." } },
+      { status: unauthorized ? 401 : 500 },
     );
   }
-  /* Persistence is client-local today; this endpoint validates and echoes until Firestore prefs are wired. */
-  return NextResponse.json({ success: true, data: parsed.data });
+}
+
+export async function DELETE() {
+  try {
+    const user = await requireUser();
+    await new NeonUserRepository().deleteAllUserData(user.id);
+    return NextResponse.json({ success: true, data: { deleted: true } });
+  } catch (error) {
+    const unauthorized = error instanceof UnauthorizedError;
+    return NextResponse.json<ApiResponse<never>>(
+      { success: false, error: { code: unauthorized ? "UNAUTHORIZED" : "DATA_DELETE_FAILED", message: unauthorized ? "Sign in to delete account data." : "Account data could not be deleted." } },
+      { status: unauthorized ? 401 : 500 },
+    );
+  }
 }

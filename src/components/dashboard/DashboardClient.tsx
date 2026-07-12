@@ -2,7 +2,8 @@
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { ArrowUpRight, Camera, CalendarDays, ShieldAlert, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowUpRight, Camera, CalendarDays, ShieldAlert, ShieldCheck } from "lucide-react";
+import { ScoreOrb } from "@/components/brand/ScoreOrb";
 import { getOnboardingPrefs, nextCheckInLabel, toProgressPoint } from "@/lib/crownscore-client";
 import { useStoredCheckIns } from "@/lib/use-stored-check-ins";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -15,38 +16,43 @@ const TrendChart = dynamic(() => import("@/components/dashboard/TrendChart").the
 function EmptyDashboard() {
   return (
     <div className="mx-auto max-w-7xl space-y-6 px-4 py-6 lg:px-10">
-      <section className="grid gap-6 xl:grid-cols-[1.25fr_0.75fr]">
-        <div className="neu-surface-lg rounded-[32px] p-6 sm:p-10">
-          <div className="neu-inset mb-8 grid size-16 place-items-center rounded-[24px] text-primary">
-            <Sparkles className="size-7" />
-          </div>
-          <p className="text-sm font-bold text-muted-foreground">No visible-health score yet</p>
-          <h2 className="mt-3 max-w-2xl font-heading text-4xl font-extrabold tracking-tight sm:text-5xl">Take your first CrownScore photo today.</h2>
-          <p className="mt-4 max-w-xl text-sm leading-6 text-muted-foreground">A usable photo is reviewed for visible concerns. This is not a diagnosis.</p>
+      <section className="grid items-center gap-8 xl:grid-cols-[1.15fr_0.85fr]">
+        <div className="reveal-up rounded-[32px] neu-surface-lg p-6 sm:p-10">
+          <p className="section-label">First check-in</p>
+          <h2 className="mt-3 max-w-2xl font-heading text-4xl tracking-tight sm:text-5xl">
+            Take your first CrownScore photo today.
+          </h2>
+          <p className="mt-4 max-w-xl text-sm leading-6 text-muted-foreground">
+            A guided capture runs on-device vision, then saves a non-diagnostic visible-health score. This page stays empty until that lands.
+          </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
               href="/check-in/capture"
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-primary px-5 text-sm font-extrabold text-primary-foreground shadow-[5px_5px_10px_rgb(163,177,198,0.6),-5px_-5px_10px_rgba(255,255,255,0.5)] transition duration-300 hover:-translate-y-0.5 hover:bg-[#7a72ff] neu-focus"
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl px-5 text-sm font-extrabold text-primary-foreground gradient-primary transition duration-300 hover:-translate-y-0.5 neu-focus"
             >
               <Camera className="size-4" />
               Start check-in
             </Link>
-            <Link href="/settings" className="inline-flex min-h-12 items-center justify-center rounded-2xl px-5 text-sm font-extrabold text-foreground neu-surface neu-focus">
+            <Link
+              href="/settings"
+              className="inline-flex min-h-12 items-center justify-center rounded-2xl px-5 text-sm font-extrabold text-foreground neu-surface neu-focus"
+            >
               Privacy settings
             </Link>
           </div>
+          <div className="mt-8 grid grid-cols-2 gap-4 sm:max-w-md">
+            <div className="rounded-[22px] p-4 neu-inset-deep">
+              <p className="text-xs font-bold text-muted-foreground">Current score</p>
+              <p className="mt-2 font-mono text-3xl font-semibold">--</p>
+            </div>
+            <div className="rounded-[22px] p-4 neu-inset-deep">
+              <p className="text-xs font-bold text-muted-foreground">Check-ins</p>
+              <p className="mt-2 font-mono text-3xl font-semibold">0</p>
+            </div>
+          </div>
         </div>
-        <div className="grid gap-6">
-          <article className="neu-inset-deep rounded-[32px] p-6">
-            <p className="text-sm font-bold text-muted-foreground">Current score</p>
-            <p className="metric-number mt-4">--</p>
-            <p className="mt-2 text-sm text-muted-foreground">Waiting for your first photo</p>
-          </article>
-          <article className="neu-inset-deep rounded-[32px] p-6">
-            <p className="text-sm font-bold text-muted-foreground">Check-ins</p>
-            <p className="metric-number mt-4">0</p>
-            <p className="mt-2 text-sm text-muted-foreground">No saved history yet</p>
-          </article>
+        <div className="reveal-up reveal-delay-1 flex justify-center py-4">
+          <ScoreOrb size="lg" label="Waiting for first photo" />
         </div>
       </section>
     </div>
@@ -140,7 +146,7 @@ export function DashboardClient() {
             <p className="mt-2 text-sm leading-6 text-muted-foreground">{nextCheckInLabel(prefs.checkInFrequency, latest.capturedAt)}</p>
             <Link
               href="/check-in/capture"
-              className="mt-6 flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-primary px-4 text-sm font-extrabold text-primary-foreground shadow-[5px_5px_10px_rgb(163,177,198,0.6),-5px_-5px_10px_rgba(255,255,255,0.5)] transition duration-300 hover:-translate-y-0.5 hover:bg-[#7a72ff] neu-focus"
+              className="mt-6 flex min-h-12 items-center justify-center gap-2 rounded-2xl px-4 text-sm font-extrabold text-primary-foreground gradient-primary transition duration-300 hover:-translate-y-0.5 neu-focus"
             >
               <Camera className="size-4" />
               Start capture
