@@ -47,7 +47,7 @@ npm run db:migrate
 npm run dev
 ```
 
-Open `http://localhost:3000`. Camera needs `localhost` or HTTPS. Neon Auth requires `DATABASE_URL`, `NEON_AUTH_BASE_URL`, and a 32+ character `NEON_AUTH_COOKIE_SECRET`. Groq remains optional.
+Open `https://localhost:3000` (`npm run dev` enables HTTPS so Neon Auth `__Secure-` session cookies work). Camera needs `localhost` or HTTPS. Neon Auth requires `DATABASE_URL`, `NEON_AUTH_BASE_URL`, and a 32+ character `NEON_AUTH_COOKIE_SECRET` — pull them with the command above after connecting the Neon Marketplace resource to Development. Groq remains optional.
 
 ```bash
 npm run lint

@@ -1,40 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useActionState } from "react";
 import { Crown, LockKeyhole } from "lucide-react";
-import { authClient } from "@/lib/auth/client";
+import { signInWithEmail, signUpWithEmail, type AuthActionState } from "@/app/auth/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
-  const router = useRouter();
   const signingUp = mode === "sign-up";
-  const [pending, setPending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  async function submit(formData: FormData) {
-    setPending(true);
-    setError(null);
-    const email = String(formData.get("email") ?? "").trim();
-    const password = String(formData.get("password") ?? "");
-    const result = signingUp
-      ? await authClient.signUp.email({
-          email,
-          password,
-          name: String(formData.get("name") ?? "").trim(),
-        })
-      : await authClient.signIn.email({ email, password });
-    if (result.error) {
-      setError(result.error.message || "Authentication failed. Please try again.");
-      setPending(false);
-      return;
-    }
-    router.push(signingUp ? "/onboarding" : "/dashboard");
-    router.refresh();
-  }
+  const action = signingUp ? signUpWithEmail : signInWithEmail;
+  const [state, formAction, pending] = useActionState<AuthActionState, FormData>(action, null);
 
   return (
     <main className="relative grid min-h-[100dvh] overflow-hidden lg:grid-cols-[1fr_1.05fr]">
@@ -78,7 +55,7 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
           <p className="mt-3 text-sm leading-6 text-muted-foreground">
             Neon Auth protects your account while Neon Postgres keeps your results available across devices.
           </p>
-          <form action={submit} className="mt-8 space-y-5">
+          <form action={formAction} className="mt-8 space-y-5">
             {signingUp && (
               <div className="space-y-2">
                 <Label htmlFor="name">Name</Label>
@@ -91,9 +68,20 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input id="password" name="password" type="password" autoComplete={signingUp ? "new-password" : "current-password"} required minLength={8} />
+              <Input
+                id="password"
+                name="password"
+                type="password"
+                autoComplete={signingUp ? "new-password" : "current-password"}
+                required
+                minLength={8}
+              />
             </div>
-            {error && <p role="alert" className="rounded-2xl p-3 text-sm font-bold text-destructive neu-inset">{error}</p>}
+            {state?.error && (
+              <p role="alert" className="rounded-2xl p-3 text-sm font-bold text-destructive neu-inset">
+                {state.error}
+              </p>
+            )}
             <Button type="submit" className="h-12 w-full" disabled={pending}>
               {pending ? "Securing your account…" : signingUp ? "Create account" : "Sign in"}
             </Button>

@@ -11,3 +11,15 @@ export function GET(request: NextRequest, context: AuthContext) {
 export function POST(request: NextRequest, context: AuthContext) {
   return handlers.POST(request, context);
 }
+
+export function PUT(request: NextRequest, context: AuthContext) {
+  return handlers.PUT(request, context);
+}
+
+export function PATCH(request: NextRequest, context: AuthContext) {
+  return handlers.PATCH(request, context);
+}
+
+export function DELETE(request: NextRequest, context: AuthContext) {
+  return handlers.DELETE(request, context);
+}
