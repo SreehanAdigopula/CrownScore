@@ -1,25 +1,25 @@
 import type { Metadata } from "next";
-import { Calistoga, Figtree, JetBrains_Mono } from "next/font/google";
+import { Fraunces, IBM_Plex_Mono, Sora } from "next/font/google";
 import "./globals.css";
 import { AccountBootstrap } from "@/components/auth/AccountBootstrap";
 import { ThemeController } from "@/components/theme/ThemeController";
 
-const figtree = Figtree({
+const sora = Sora({
   subsets: ["latin"],
-  variable: "--font-figtree",
+  variable: "--font-sora",
   display: "swap",
 });
 
-const calistoga = Calistoga({
+const fraunces = Fraunces({
   subsets: ["latin"],
-  weight: "400",
-  variable: "--font-calistoga",
+  variable: "--font-fraunces",
   display: "swap",
 });
 
-const jetbrainsMono = JetBrains_Mono({
+const ibmPlexMono = IBM_Plex_Mono({
   subsets: ["latin"],
-  variable: "--font-jetbrains",
+  weight: ["400", "500", "600"],
+  variable: "--font-ibm-plex",
   display: "swap",
 });
 
@@ -38,7 +38,7 @@ export default function RootLayout({
     <html
       lang="en"
       data-scroll-behavior="smooth"
-      className={`h-full antialiased ${figtree.variable} ${calistoga.variable} ${jetbrainsMono.variable}`}
+      className={`h-full antialiased ${sora.variable} ${fraunces.variable} ${ibmPlexMono.variable}`}
     >
       <body className="flex min-h-full flex-col bg-background font-sans text-foreground">
         <ThemeController />

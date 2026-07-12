@@ -97,7 +97,7 @@ export default function AnalyzingPage() {
         <section className="w-full">
           <div className="relative mx-auto mb-10 grid size-32 place-items-center">
             <div
-              className="absolute inset-0 rounded-full score-ring shadow-[0_20px_50px_rgb(0,82,255,0.2)]"
+              className="absolute inset-0 rounded-full score-ring shadow-[0_20px_50px_var(--glow-primary)]"
               style={{ ["--score-angle" as string]: `${(progress / 100) * 360}deg` }}
             />
             <div className="relative z-10 flex flex-col items-center">

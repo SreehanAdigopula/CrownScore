@@ -19,7 +19,7 @@ const coachOptions = [
 
 function selectableClass(isSelected: boolean) {
   return isSelected
-    ? "border-primary/50 bg-primary/10 text-primary shadow-[0_18px_42px_rgb(0,82,255,0.12)]"
+    ? "border-primary/50 bg-primary/10 text-primary shadow-[0_18px_42px_var(--glow-primary)]"
     : "border-border bg-card text-foreground hover:border-primary/35 hover:bg-muted/70";
 }
 
@@ -70,7 +70,7 @@ export default function OnboardingPage() {
       <div className="atmosphere-grain fixed inset-0 opacity-30" aria-hidden />
       <div className="relative z-10 flex items-center justify-between">
         <span className="flex items-center gap-2 font-heading text-lg tracking-tight">
-          <span className="grid size-9 place-items-center rounded-2xl gradient-primary shadow-[0_12px_26px_rgb(0,82,255,0.2)]">
+          <span className="brand-mark size-9">
             <Crown className="size-4" />
           </span>
           CrownScore

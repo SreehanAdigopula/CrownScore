@@ -17,7 +17,7 @@ const nav = [
 function Mark({ compact = false }: { compact?: boolean }) {
   return (
     <span className="flex items-center gap-3 font-heading text-lg tracking-tight">
-      <span className="grid size-11 place-items-center rounded-2xl text-primary-foreground gradient-primary shadow-[0_16px_34px_rgb(0,82,255,0.22)]">
+      <span className="brand-mark size-11">
         <Crown className="size-5" />
       </span>
       {!compact && <span>CrownScore</span>}
@@ -37,7 +37,7 @@ export function AppShell({ children, title }: { children: React.ReactNode; title
         Skip to content
       </a>
       {!captureImmersive && <div className="atmosphere-grain fixed inset-0 z-0 opacity-25" aria-hidden />}
-      <aside className={cn("fixed inset-y-0 left-0 z-30 hidden w-72 flex-col border-r border-border/70 bg-card/80 p-6 backdrop-blur-xl lg:flex", captureImmersive && "lg:hidden")}>
+      <aside className={cn("fixed inset-y-0 left-0 z-30 hidden w-72 flex-col border-r border-border/70 bg-card/85 p-6 backdrop-blur-xl lg:flex", captureImmersive && "lg:hidden")}>
         <Link href="/dashboard" className="mb-10 rounded-[32px] p-3 neu-focus">
           <Mark />
         </Link>
@@ -88,9 +88,9 @@ export function AppShell({ children, title }: { children: React.ReactNode; title
       </aside>
       <main id="main-content" className={cn("relative z-10 min-w-0", captureImmersive ? "pb-0" : "pb-24 lg:pb-10")}>
         {!captureImmersive && (
-          <header className="sticky top-0 z-20 flex h-20 items-center justify-between border-b border-border/40 bg-background/75 px-4 backdrop-blur-xl lg:px-10">
+          <header className="sticky top-0 z-20 flex h-20 items-center justify-between border-b border-border/50 bg-background/80 px-4 backdrop-blur-xl lg:px-10">
             <div className="min-w-0">
-              <p className="text-xs font-bold text-muted-foreground">Visible hair & scalp health</p>
+              <p className="text-xs font-bold uppercase tracking-[0.14em] text-accent">Scalp & hair health</p>
               <h1 className="truncate font-heading text-xl tracking-tight">{title ?? "CrownScore"}</h1>
             </div>
             <div className="flex items-center gap-3">
@@ -107,7 +107,7 @@ export function AppShell({ children, title }: { children: React.ReactNode; title
         {children}
       </main>
       {!captureImmersive && (
-      <nav className="safe-bottom fixed inset-x-3 bottom-3 z-40 grid grid-cols-5 rounded-[28px] bg-card/95 p-2 backdrop-blur-xl lg:hidden neu-surface">
+      <nav className="safe-bottom fixed inset-x-3 bottom-3 z-40 grid grid-cols-5 rounded-[28px] border border-border/60 bg-card/95 p-2 backdrop-blur-xl lg:hidden neu-surface">
         {nav.map((item) => (
           <Link
             key={item.href}
@@ -121,7 +121,7 @@ export function AppShell({ children, title }: { children: React.ReactNode; title
               "flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl text-[10px] font-bold text-muted-foreground neu-focus",
               !item.primary && pathname.startsWith(item.href) && "text-primary",
               item.primary && pathname.startsWith("/check-in") && "ring-2 ring-primary/35",
-              item.primary && "gradient-primary shadow-[0_12px_30px_rgb(0,82,255,0.22)]"
+              item.primary && "gradient-primary shadow-[0_12px_30px_var(--glow-primary)]"
             )}
           >
             <item.icon className="size-5" />

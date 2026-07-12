@@ -195,16 +195,16 @@ export function CameraCapture() {
       />
       {preview && <img src={preview} alt="Captured scalp preview" className="absolute inset-0 size-full object-cover" />}
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_42%_34%_at_50%_42%,transparent_0%,transparent_72%,rgba(9,9,11,.82)_76%)]" />
-      <div className="pointer-events-none absolute left-1/2 top-[42%] h-[min(34vw,30vh)] w-[min(52vw,38vh)] -translate-x-1/2 -translate-y-1/2 rounded-[50%] border-2 border-emerald-300/80 shadow-[0_0_0_1px_rgba(0,0,0,.35)] sm:h-[30%] sm:w-[38%]">
-        <span className="absolute left-1/2 top-0 h-3 w-px -translate-x-1/2 bg-emerald-300" />
-        <span className="absolute bottom-0 left-1/2 h-3 w-px -translate-x-1/2 bg-emerald-300" />
+      <div className="pointer-events-none absolute left-1/2 top-[42%] h-[min(34vw,30vh)] w-[min(52vw,38vh)] -translate-x-1/2 -translate-y-1/2 rounded-[50%] border-2 border-accent/70 shadow-[0_0_0_1px_rgba(0,0,0,.35)] sm:h-[30%] sm:w-[38%]">
+        <span className="absolute left-1/2 top-0 h-3 w-px -translate-x-1/2 bg-accent" />
+        <span className="absolute bottom-0 left-1/2 h-3 w-px -translate-x-1/2 bg-accent" />
       </div>
       {count && <div className="absolute inset-0 grid place-items-center bg-zinc-950/35 font-mono text-7xl font-semibold backdrop-blur-sm">{count}</div>}
       <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-3 p-4 pt-[max(1rem,env(safe-area-inset-top))]">
         <div className="max-w-[58%] rounded-full border border-white/20 bg-zinc-950/55 px-3 py-2 text-[11px] font-bold leading-snug text-white backdrop-blur-md sm:max-w-none sm:text-xs">
           Align the crown inside the guide
         </div>
-        <div className="flex shrink-0 items-center gap-2 rounded-full border border-emerald-300/30 bg-zinc-950/55 px-3 py-2 text-[11px] font-bold text-emerald-200 backdrop-blur-md sm:text-xs">
+        <div className="flex shrink-0 items-center gap-2 rounded-full border border-accent/30 bg-zinc-950/55 px-3 py-2 text-[11px] font-bold text-[#8ecdb8] backdrop-blur-md sm:text-xs">
           <Check className="size-3" />
           Ready
         </div>
@@ -212,11 +212,11 @@ export function CameraCapture() {
       <div className="absolute inset-x-0 bottom-0 p-4 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
         <div className="mx-auto mb-5 flex max-w-sm flex-wrap justify-center gap-2">
           <span className="flex items-center gap-2 rounded-full border border-white/15 bg-zinc-950/55 px-3 py-2 text-[11px] font-bold text-white/90 backdrop-blur-md sm:text-xs">
-            <Sun className="size-3 text-emerald-300" />
+            <Sun className="size-3 text-accent" />
             Even light
           </span>
           <span className="flex items-center gap-2 rounded-full border border-white/15 bg-zinc-950/55 px-3 py-2 text-[11px] font-bold text-white/90 backdrop-blur-md sm:text-xs">
-            <ScanLine className="size-3 text-emerald-300" />
+            <ScanLine className="size-3 text-accent" />
             Fill guide
           </span>
         </div>
