@@ -4,3 +4,4 @@ onnx>=1.16
 onnxruntime>=1.18
 pillow>=10.0
 numpy>=1.26
+ultralytics==8.4.21

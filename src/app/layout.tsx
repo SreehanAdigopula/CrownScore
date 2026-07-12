@@ -5,7 +5,7 @@ import { ThemeController } from "@/components/theme/ThemeController";
 
 export const metadata: Metadata = {
   title: "CrownScore | Personal hair progress",
-  description: "Guided scalp check-ins and relative progress tracking based on your own baseline.",
+  description: "Guided, non-diagnostic visible hair and scalp health check-ins.",
 };
 
 export default function RootLayout({

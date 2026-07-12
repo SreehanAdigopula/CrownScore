@@ -1,3 +1,4 @@
-import { describe,expect,it } from "vitest"; import { evaluateSafety } from "@/server/services/safety-service";
-const base={baselineChangePercent:2,consecutiveDeclines:0,confidence:0.9,questionnaire:{adherenceRate:90,shedding:"TYPICAL" as const,irritation:false,scalpPain:false,routineChanged:false}};
-describe("deterministic safety",()=>{ it("returns clear without triggers",()=>expect(evaluateSafety(base).status).toBe("CLEAR")); it("elevates rapid decline",()=>{ const result=evaluateSafety({...base,baselineChangePercent:-14}); expect(result.status).toBe("SEEK_PROFESSIONAL_GUIDANCE"); expect(result.ruleIds).toContain("RAPID_RELATIVE_DECLINE"); }); it("never requires an LLM",()=>expect(evaluateSafety({...base,questionnaire:{...base.questionnaire,irritation:true}}).status).toBe("WATCH")); });
+import { describe, expect, it } from "vitest";
+import { evaluateSafety } from "@/server/services/safety-service";
+const base = { concerns: [] as string[], qualityStatus: "GOOD" as const, questionnaire: { adherenceRate: 90, shedding: "TYPICAL" as const, irritation: false, scalpPain: false, routineChanged: false } };
+describe("deterministic safety", () => { it("returns clear without triggers", () => expect(evaluateSafety(base).status).toBe("CLEAR")); it("flags an insufficient image", () => expect(evaluateSafety({ ...base, qualityStatus: "INSUFFICIENT" }).ruleIds).toContain("INSUFFICIENT_IMAGE")); it("never requires an LLM", () => expect(evaluateSafety({ ...base, questionnaire: { ...base.questionnaire, irritation: true } }).status).toBe("WATCH")); });

@@ -1,16 +1,14 @@
 import type { Questionnaire, SafetyStatus } from "@/server/domain/types";
 
-export const SAFETY_ENGINE_VERSION = "crownscore-safety-v1";
+export const SAFETY_ENGINE_VERSION = "crownscore-safety-v2";
 
-export function evaluateSafety(input: { baselineChangePercent: number; consecutiveDeclines: number; confidence: number; questionnaire: Questionnaire }): { status: SafetyStatus; ruleIds: string[]; reasons: string[] } {
-  const rules: string[] = [];
-  const reasons: string[] = [];
+export function evaluateSafety(input: { concerns: string[]; qualityStatus: "GOOD" | "REVIEW" | "INSUFFICIENT"; questionnaire: Questionnaire }): { status: SafetyStatus; ruleIds: string[]; reasons: string[] } {
+  const rules: string[] = [], reasons: string[] = [];
   if (input.questionnaire.scalpPain) { rules.push("SYMPTOM_SCALP_PAIN"); reasons.push("You reported scalp pain."); }
   if (input.questionnaire.irritation) { rules.push("SYMPTOM_IRRITATION"); reasons.push("You reported irritation."); }
   if (input.questionnaire.shedding === "HIGH") { rules.push("SYMPTOM_HIGH_SHEDDING"); reasons.push("You reported unusual shedding."); }
-  if (input.baselineChangePercent <= -12) { rules.push("RAPID_RELATIVE_DECLINE"); reasons.push("The relative score is substantially below your baseline."); }
-  if (input.consecutiveDeclines >= 3) { rules.push("REPEATED_DECLINE"); reasons.push("Several check-ins show a declining pattern."); }
-  if (input.confidence < 0.55) { rules.push("LOW_IMAGE_CONFIDENCE"); reasons.push("Image quality is too low for a reliable comparison."); }
-  const urgent = rules.includes("SYMPTOM_SCALP_PAIN") || rules.includes("RAPID_RELATIVE_DECLINE") || rules.length >= 3;
+  if (input.qualityStatus === "INSUFFICIENT") { rules.push("INSUFFICIENT_IMAGE"); reasons.push("The image is not suitable for a visible-concern score."); }
+  if (input.concerns.length >= 3) { rules.push("MULTIPLE_VISIBLE_CONCERNS"); reasons.push("Several distinct visible concerns were highlighted for review."); }
+  const urgent = rules.includes("SYMPTOM_SCALP_PAIN") || (rules.includes("SYMPTOM_IRRITATION") && rules.includes("SYMPTOM_HIGH_SHEDDING"));
   return { status: urgent ? "SEEK_PROFESSIONAL_GUIDANCE" : rules.length ? "WATCH" : "CLEAR", ruleIds: rules, reasons };
 }

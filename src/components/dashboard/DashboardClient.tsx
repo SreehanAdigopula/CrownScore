@@ -6,14 +6,6 @@ import { ArrowUpRight, Camera, CalendarDays, ShieldAlert, ShieldCheck, Sparkles 
 import { getStoredCheckIns, toProgressPoint, type StoredCheckIn } from "@/lib/crownscore-client";
 import { TrendChart } from "@/components/dashboard/TrendChart";
 
-const trendLabels = {
-  AHEAD_OF_EXPECTED: "Ahead of expected",
-  ON_TRACK: "On track",
-  WORTH_WATCHING: "Worth watching",
-  INSUFFICIENT_QUALITY: "Low image quality",
-  INSUFFICIENT_HISTORY: "More history needed",
-};
-
 function EmptyDashboard() {
   return (
     <div className="mx-auto max-w-7xl space-y-6 px-4 py-6 lg:px-10">
@@ -22,13 +14,13 @@ function EmptyDashboard() {
           <div className="neu-inset mb-8 grid size-16 place-items-center rounded-[24px] text-primary">
             <Sparkles className="size-7" />
           </div>
-          <p className="text-sm font-bold text-muted-foreground">No baseline yet</p>
+          <p className="text-sm font-bold text-muted-foreground">No visible-health score yet</p>
           <h2 className="mt-3 max-w-2xl font-heading text-4xl font-extrabold tracking-tight sm:text-5xl">Take your first CrownScore photo today.</h2>
-          <p className="mt-4 max-w-xl text-sm leading-6 text-muted-foreground">Your first usable check-in becomes the baseline. History, score movement, streaks, and coach notes stay empty until you create real records.</p>
+          <p className="mt-4 max-w-xl text-sm leading-6 text-muted-foreground">A usable photo is reviewed for visible concerns. This is not a diagnosis.</p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link href="/check-in/capture" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-primary px-5 text-sm font-extrabold text-primary-foreground shadow-[5px_5px_10px_rgb(163,177,198,0.6),-5px_-5px_10px_rgba(255,255,255,0.5)] transition duration-300 hover:-translate-y-0.5 hover:bg-[#7a72ff] neu-focus">
               <Camera className="size-4" />
-              Start baseline
+              Start check-in
             </Link>
             <Link href="/settings" className="inline-flex min-h-12 items-center justify-center rounded-2xl px-5 text-sm font-extrabold text-foreground neu-surface neu-focus">Privacy settings</Link>
           </div>
@@ -66,8 +58,6 @@ export function DashboardClient() {
   const latest = latestRecord.analysis;
   const history = records.map(toProgressPoint);
   const safetyElevated = latest.safetyStatus !== "CLEAR";
-  const baseline = history[0];
-  const baselineChange = Number((latest.normalizedScore - baseline.normalizedScore).toFixed(1));
 
   return (
     <div className="mx-auto max-w-7xl space-y-6 px-4 py-6 lg:px-10">
@@ -86,23 +76,20 @@ export function DashboardClient() {
         <div className="neu-surface-lg rounded-[32px] p-6 sm:p-8">
           <div className="flex flex-wrap items-start justify-between gap-5">
             <div>
-              <p className="text-sm font-bold text-muted-foreground">Current relative score</p>
+              <p className="text-sm font-bold text-muted-foreground">Current visible-health score</p>
               <div className="mt-3 flex items-baseline gap-3">
-                <span className="metric-number">{latest.normalizedScore}</span>
-                <span className={baselineChange >= 0 ? "font-bold text-[#0f766e]" : "font-bold text-[#b45309]"}>
-                  {baselineChange >= 0 ? "+" : ""}{baselineChange}%
-                </span>
+                <span className="metric-number">{latest.healthScore ?? "--"}</span>
               </div>
-              <p className="mt-2 text-xs text-muted-foreground">Baseline = your first saved check-in</p>
+              <p className="mt-2 text-xs text-muted-foreground">Higher means fewer model-detected visible concerns.</p>
             </div>
-            <span className="neu-inset rounded-full px-4 py-2 text-xs font-bold text-primary">{trendLabels[latest.trendStatus]}</span>
+            <span className="neu-inset rounded-full px-4 py-2 text-xs font-bold text-primary">{latest.status === "SCORED" ? `${latest.concerns.length} visible concern${latest.concerns.length === 1 ? "" : "s"}` : "Retake needed"}</span>
           </div>
           {history.length > 1 ? (
             <div className="mt-8"><TrendChart data={history} /></div>
           ) : (
             <div className="neu-inset-deep mt-8 grid min-h-72 place-items-center rounded-[28px] p-6 text-center">
               <div>
-                <p className="font-heading text-2xl font-extrabold tracking-tight">Baseline saved today</p>
+                <p className="font-heading text-2xl font-extrabold tracking-tight">First score saved today</p>
                 <p className="mt-2 max-w-sm text-sm leading-6 text-muted-foreground">Take another check-in later to unlock the trend chart.</p>
               </div>
             </div>
@@ -128,7 +115,7 @@ export function DashboardClient() {
             </div>
             <div className="mt-6 space-y-4 text-sm">
               <div className="flex items-center justify-between"><span className="text-muted-foreground">Saved check-ins</span><span className="font-bold">{records.length}</span></div>
-              <div className="flex items-center justify-between"><span className="text-muted-foreground">Image confidence</span><span className="font-bold">{Math.round(latest.quality.confidence * 100)}%</span></div>
+              <div className="flex items-center justify-between"><span className="text-muted-foreground">Model confidence</span><span className="font-bold">{Math.round(latest.modelConfidence * 100)}%</span></div>
             </div>
           </article>
         </div>

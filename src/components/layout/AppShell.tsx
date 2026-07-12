@@ -60,13 +60,13 @@ export function AppShell({ children, title }: { children: React.ReactNode; title
             <Settings className="size-4" />
             Settings
           </Link>
-          <p className="px-4 text-xs leading-5 text-muted-foreground">Relative progress tracking. Not a diagnostic product.</p>
+          <p className="px-4 text-xs leading-5 text-muted-foreground">Visible-concern tracking. Not a diagnostic product.</p>
         </div>
       </aside>
       <main className="min-w-0 pb-24 lg:pb-10">
         <header className="sticky top-0 z-20 flex h-20 items-center justify-between bg-background/85 px-4 backdrop-blur-xl lg:px-10">
           <div className="min-w-0">
-            <p className="text-xs font-bold text-muted-foreground">Personal baseline</p>
+            <p className="text-xs font-bold text-muted-foreground">Visible hair & scalp health</p>
             <h1 className="truncate font-heading text-xl font-extrabold tracking-tight">{title ?? "CrownScore"}</h1>
           </div>
           <Link href="/check-in/capture" className="hidden rounded-2xl px-4 py-3 text-sm font-extrabold gradient-primary neu-focus sm:inline-flex">

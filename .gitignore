@@ -48,4 +48,6 @@ next-env.d.ts
 /ml/.venv/
 /ml/*.onnx
 /ml/__pycache__/
+/runs/
+/yolov8n.pt
 *.pyc

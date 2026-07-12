@@ -67,9 +67,9 @@ export default function OnboardingPage() {
         </h1>
         <p className="mt-3 text-sm leading-6 text-muted-foreground">
           {step === 0
-            ? "This personalizes the educational expected curve. It does not evaluate treatment effectiveness."
+            ? "This personalizes check-in timing. It does not evaluate treatment effectiveness."
             : step === 1
-              ? "Regular timing makes relative comparisons easier to interpret."
+              ? "Regular timing makes visible changes easier to review consistently."
               : "Tone changes wording only. Facts and safety outcomes stay fixed."}
         </p>
         {step === 0 && (

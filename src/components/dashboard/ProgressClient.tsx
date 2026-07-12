@@ -19,7 +19,7 @@ export function ProgressClient() {
   const history = records.map(toProgressPoint);
   const first = history[0];
   const latest = history.at(-1);
-  const change = first && latest ? Number((latest.normalizedScore - first.normalizedScore).toFixed(1)) : 0;
+  const change = first?.healthScore != null && latest?.healthScore != null ? latest.healthScore - first.healthScore : null;
 
   if (!latest) {
     return (
@@ -30,7 +30,7 @@ export function ProgressClient() {
           <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-muted-foreground">CrownScore needs your first saved check-in before it can show movement over time.</p>
           <Link href="/check-in/capture" className="mt-8 inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-primary px-5 text-sm font-extrabold text-primary-foreground shadow-[5px_5px_10px_rgb(163,177,198,0.6),-5px_-5px_10px_rgba(255,255,255,0.5)] neu-focus">
             <Camera className="size-4" />
-            Start baseline
+            Start check-in
           </Link>
         </section>
       </div>
@@ -41,14 +41,14 @@ export function ProgressClient() {
     <div className="mx-auto max-w-6xl space-y-6 p-4 lg:p-10">
       <section className="grid gap-6 md:grid-cols-[1.4fr_0.6fr]">
         <div className="neu-surface-lg rounded-[32px] p-6 sm:p-8">
-          <h2 className="font-heading text-xl font-extrabold tracking-tight">Actual versus expected</h2>
-          <p className="mt-1 text-sm text-muted-foreground">Scores are relative to your first usable check-in.</p>
-          {history.length > 1 ? <div className="mt-6"><TrendChart data={history} /></div> : <div className="neu-inset-deep mt-6 grid h-72 place-items-center rounded-[28px] p-6 text-center text-sm text-muted-foreground">One baseline saved. A trend appears after the next check-in.</div>}
+          <h2 className="font-heading text-xl font-extrabold tracking-tight">Visible-health score history</h2>
+          <p className="mt-1 text-sm text-muted-foreground">Each score comes only from visible concerns detected in that image.</p>
+          {history.length > 1 ? <div className="mt-6"><TrendChart data={history} /></div> : <div className="neu-inset-deep mt-6 grid h-72 place-items-center rounded-[28px] p-6 text-center text-sm text-muted-foreground">One score saved. A trend appears after the next usable check-in.</div>}
         </div>
         <div className="grid gap-6">
           <article className="neu-surface rounded-[32px] p-6">
-            <p className="text-sm font-bold text-muted-foreground">Change since baseline</p>
-            <p className="metric-number mt-4">{change > 0 ? "+" : ""}{change}%</p>
+            <p className="text-sm font-bold text-muted-foreground">Change since first score</p>
+            <p className="metric-number mt-4">{change == null ? "--" : `${change > 0 ? "+" : ""}${change}`}</p>
           </article>
           <article className="neu-surface rounded-[32px] p-6">
             <p className="text-sm font-bold text-muted-foreground">Reliable history</p>
@@ -61,7 +61,7 @@ export function ProgressClient() {
         <h2 className="font-heading text-xl font-extrabold tracking-tight">Photo comparison</h2>
         <div className="mt-6 grid min-h-64 overflow-hidden rounded-[28px] md:grid-cols-2 neu-inset-deep">
           <div className="grid place-items-center p-6 text-center">
-            <span className="text-sm font-bold text-muted-foreground">Baseline</span>
+            <span className="text-sm font-bold text-muted-foreground">First check-in</span>
           </div>
           <div className="grid place-items-center p-6 text-center">
             <span className="text-sm font-bold text-muted-foreground">{history.length > 1 ? "Latest" : "Waiting for second photo"}</span>

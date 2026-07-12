@@ -105,8 +105,8 @@ export default function SettingsPage() {
             <div>
               <h2 className="font-heading text-2xl font-extrabold tracking-tight">What CrownScore can and cannot do</h2>
               <div className="mt-5 space-y-4 text-sm leading-6 text-muted-foreground">
-                <p>Scores show relative change from your own baseline. They are not absolute or clinically validated density measurements.</p>
-                <p>Expected curves are educational approximations, not medical predictions.</p>
+                <p>Scores summarize model-detected visible concerns in one image. They are not diagnoses or clinically validated health measurements.</p>
+                <p>Gray hair is not penalized, and the score must not be used to infer age, ethnicity, sex, hairstyle, or hair type.</p>
                 <p>AI summaries are educational and cannot diagnose, prescribe, or override fixed safety rules.</p>
               </div>
             </div>

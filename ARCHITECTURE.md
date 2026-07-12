@@ -3,40 +3,23 @@
 ## Analysis pipeline
 
 ```text
-Camera capture
--> browser crop and compression
--> authenticated upload
--> request validation
--> relative density score
--> baseline normalization
--> expected-curve interpolation
--> trend classification
--> deterministic safety evaluation
--> coach wording with mock fallback
--> persistence and audit event
+Guide-aligned camera capture (not mirrored)
+-> deterministic image-quality checks
+-> browser ONNX YOLOv8n inference with letterbox preprocessing
+-> class-aware non-maximum suppression
+-> validated detection/quality API payload
+-> deterministic 0–100 visible-health score
+-> fixed symptom/quality safety review
+-> non-diagnostic coach wording
+-> local/Firebase persistence
 ```
 
-Route handlers parse and validate. Services orchestrate workflows. Repositories own Firestore access. Pure analysis functions have no React, Firebase, Next.js, or LLM dependencies.
-
-## Runtime modes
-
-The product UI starts empty and reads only real local/Firebase check-ins. Synthetic demo fixtures are isolated under internal demo routes. Firebase client initialization occurs only when public configuration exists. Firebase Admin is lazy and used only from server modules. Groq is optional.
-
-## Data model
-
-```text
-users/{uid}
-users/{uid}/preferences/default
-users/{uid}/checkIns/{checkInId}
-users/{uid}/checkIns/{checkInId}/analysis/result
-users/{uid}/checkIns/{checkInId}/coachSummary/result
-users/{uid}/auditEvents/{eventId}
-referenceCurves/{treatmentType}
-demoScenarios/{scenarioId}
-```
-
-Expected curves currently live in versioned TypeScript constants and can be copied to Firestore later.
+The displayed score is derived only from the current health detector outputs.
+Gray hair has zero weight, duplicate overlapping boxes are removed, and the
+low-hair-density class is capped so it cannot dominate the score.
 
 ## Safety boundary
 
-The LLM receives structured measurements and a completed safety status. It cannot select processing steps, change data, classify safety, or recommend medication. Elevated results use fixed user-facing guidance even if the model is unavailable.
+The LLM receives a completed score, visible-concern labels, and fixed safety
+status. It cannot change detections, scoring, image quality, or safety rules.
+CrownScore reports possible visible concerns and never a medical diagnosis.

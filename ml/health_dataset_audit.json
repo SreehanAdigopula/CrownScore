@@ -1,0 +1,13 @@
+{
+  "source": "ml/datasets/Figaro1k/hair scalp analysis -Forked on 7-12-2026.coco",
+  "format": "COCO object detection (no source data.yaml)",
+  "reported_images": 888,
+  "observed_images": 886,
+  "splits": {
+    "train": {"images": 722, "annotations": 1751, "boxes": {"Alopecia Areata": 213, "Contact Dermatitis": 168, "Folliculitis": 209, "Head_Lice": 75, "Psoriasis": 14, "dandruff": 651, "dry hair": 149, "grey hair": 133, "low hair density": 139}},
+    "validation": {"images": 86, "annotations": 193, "boxes": {"Alopecia Areata": 25, "Contact Dermatitis": 14, "Folliculitis": 43, "Head_Lice": 52, "Psoriasis": 6, "dandruff": 34, "dry hair": 10, "grey hair": 0, "low hair density": 9}},
+    "test": {"images": 78, "annotations": 213, "boxes": {"Alopecia Areata": 38, "Contact Dermatitis": 18, "Folliculitis": 26, "Head_Lice": 69, "Psoriasis": 4, "dandruff": 51, "dry hair": 1, "grey hair": 6, "low hair density": 0}}
+  },
+  "integrity": {"missing_images": 0, "unreadable_images": 0, "empty_annotations": 0, "dimension_mismatches": 0, "exact_cross_split_duplicates": 0, "same_source_cross_split_duplicates": 0, "identical_average_hash_cross_split_duplicates": 0, "boundary_clamped_boxes": 5},
+  "limitations": ["No explicit healthy/control or irrelevant-image class", "Severe class imbalance", "No gray-hair validation boxes", "No low-hair-density test boxes", "Watermarks, coarse boxes, and very small boxes are present"]
+}

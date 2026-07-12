@@ -13,7 +13,6 @@
     "postinstall": "node scripts/copy-ort-wasm.mjs"
   },
   "dependencies": {
-    "@techstark/opencv-js": "^5.0.0-release.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "firebase": "^12.16.0",

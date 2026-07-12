@@ -45,7 +45,7 @@ export default function CoachPage() {
               <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-muted-foreground">The coach appears after your first analyzed check-in. Until then, CrownScore keeps the page empty.</p>
               <Link href="/check-in/capture" className="mt-7 inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-primary px-5 text-sm font-extrabold text-primary-foreground shadow-[5px_5px_10px_rgb(163,177,198,0.6),-5px_-5px_10px_rgba(255,255,255,0.5)] neu-focus">
                 <Camera className="size-4" />
-                Start baseline
+                Start check-in
               </Link>
             </div>
           )}

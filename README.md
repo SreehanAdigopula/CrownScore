@@ -1,15 +1,15 @@
 # CrownScore
 
-CrownScore is a mobile-first hair-progress tracker built around one simple rule: a user starts with no progress data, and the first usable check-in becomes their personal baseline.
+CrownScore is a mobile-first tracker that summarizes model-detected visible hair and scalp concerns from consistent photos.
 
-CrownScore is not a diagnostic product. Its score is a relative progress metric, not an absolute or clinically validated hair-density measurement.
+CrownScore is not a diagnostic product. Its 0–100 visible-health score is not a clinical measurement and does not replace a qualified professional.
 
 ## What is built
 
 - Next.js App Router frontend with CrownScore branding and Soft UI styling
 - Empty first-run dashboard, history, progress, and coach states
 - Guided camera capture and questionnaire flow
-- Relative scoring, confidence scoring, trend classification, and deterministic safety rules
+- YOLOv8n browser inference, visible-health scoring, image-quality checks, and deterministic safety rules
 - Optional Groq coach provider with timeout, Zod validation, and automatic mock fallback
 - Firebase client/admin adapters plus Firestore and Storage rules
 - Local guest fallback when Firebase public config is not present
@@ -27,12 +27,12 @@ Open `http://localhost:3000`. With no Firebase or Groq values, CrownScore still 
 
 New users start with zero records:
 
-- Dashboard shows no baseline yet
+- Dashboard shows no visible-health score yet
 - History shows no saved photos
 - Progress shows no chart
 - Coach shows no summary
 
-After the first captured check-in, CrownScore saves one local record dated today and treats that score as baseline `100`.
+After a usable captured check-in, CrownScore saves the visible-health score, concerns, uncertainty, and quality notes locally.
 
 ## Firebase setup
 

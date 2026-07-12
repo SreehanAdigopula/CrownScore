@@ -1,12 +1,16 @@
 # Known limitations
 
-- Expected treatment curves are educational demo approximations, not medical predictions.
-- The OpenCV.js scorer estimates visible dark-pixel coverage after a guided crop. Hair color, scalp color, lighting, and styling can affect it. If the OpenCV WASM runtime fails to load, a pure-canvas scorer with the same thresholding approach takes over; a check-in without any photo falls back to a simulated trajectory.
-- Baselines are per-browser: the first check-in's raw ratio becomes the reference, so mixing photo and photo-free check-ins in one history reduces comparability.
-- Browser measurements are hints. A production deployment should repeat or validate scoring in a trusted worker.
-- Demo photos use a generated, non-clinical hero asset rather than a longitudinal synthetic scalp set.
-- Firebase upload orchestration and thumbnail generation are represented by secure adapters and rules, but require project credentials to exercise live.
-- In-memory and local demo data are intentionally deterministic and are not a substitute for Firestore persistence.
-- Camera quality labels currently reflect implemented lighting, sharpness, and alignment heuristics. There is no claim of precise head tracking.
-- The ONNX capture-quality classifier is a gate ("is this photo usable?"), not a diagnostic or hair-health model. It is trained on public hair-segmentation datasets (Figaro1k) and synthetic corruptions, not clinical or dermatological data. If `public/models/crown-classifier.onnx` is a dev build from `ml/` synthetic mode, it has never seen a real photograph — retrain on real data before making accuracy claims (see ml/README.md).
-- If the classifier model file or the onnxruntime-web WASM runtime is unavailable, the capture flow skips the gate entirely and falls back to metadata-only validation.
+- The training export is small and highly imbalanced. Several rare classes
+  cannot receive reliable split-specific metrics.
+- The supplied dataset has no explicit healthy/control or irrelevant-image
+  class. A lack of detections is therefore not proof of health, and deterministic
+  quality heuristics cannot reliably reject every wrong-subject photograph.
+- Labels describe visible patterns from a community dataset, not confirmed
+  clinical diagnoses. Dataset provenance and annotation consistency limit
+  real-world and demographic generalization.
+- Camera quality checks cover brightness, contrast, and sharpness. They do not
+  provide full head-pose estimation or clinical image validation.
+- Browser inference is privacy-friendly but client-controlled. A higher-assurance
+  deployment should repeat model inference in a trusted service.
+- Firebase persistence requires project credentials; local guest records remain
+  browser-specific.

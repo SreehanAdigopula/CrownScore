@@ -95,8 +95,7 @@ export function toProgressPoint(record: StoredCheckIn): ProgressPoint {
     id: analysis.id,
     capturedAt: analysis.capturedAt,
     treatmentWeek: analysis.treatmentWeek,
-    normalizedScore: analysis.normalizedScore,
-    expectedScore: analysis.expectedScore,
+    healthScore: analysis.healthScore,
     safetyStatus: analysis.safetyStatus,
     adherenceRate: analysis.adherenceRate,
   };
@@ -106,13 +105,4 @@ export function getTreatmentWeek(firstCapturedAt?: string | null) {
   if (!firstCapturedAt) return 0;
   const days = Math.max(0, Date.now() - new Date(firstCapturedAt).getTime()) / 86_400_000;
   return Math.floor(days / 7);
-}
-
-export function countConsecutiveDeclines(points: ProgressPoint[]) {
-  let declines = 0;
-  for (let index = points.length - 1; index > 0; index -= 1) {
-    if (points[index].normalizedScore >= points[index - 1].normalizedScore) break;
-    declines += 1;
-  }
-  return declines;
 }
