@@ -24,7 +24,7 @@ export function ScoreOrb({
   className,
   animate = true,
 }: ScoreOrbProps) {
-  const angle = score == null ? 0 : Math.max(12, Math.min(360, (score / 100) * 360));
+  const angle = score == null ? 118 : Math.max(12, Math.min(360, (score / 100) * 360));
 
   return (
     <div
@@ -35,9 +35,11 @@ export function ScoreOrb({
         className
       )}
       style={{ ["--score-angle" as string]: `${angle}deg` }}
+      role="img"
+      aria-label={score == null ? `${label}. No score yet.` : `${label}: ${score} of 100.`}
     >
-      <div className="score-ticks absolute -inset-[7%] rounded-full opacity-60" aria-hidden />
-      <div className="score-ring absolute inset-0 rounded-full shadow-[0_30px_80px_var(--glow-primary)]" />
+      <div className="score-ticks absolute -inset-[8%] rounded-full opacity-70" aria-hidden />
+      <div className="score-ring absolute inset-0 rounded-full shadow-[0_28px_70px_var(--glow-primary)]" />
       <div className="relative z-10 flex flex-col items-center text-center">
         {score == null ? (
           <>

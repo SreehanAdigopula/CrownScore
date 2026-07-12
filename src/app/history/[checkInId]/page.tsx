@@ -67,7 +67,7 @@ export default function DetailPage() {
           </div>
           {record.coach.headline && (
             <div className="mt-6 rounded-[28px] p-5 neu-inset">
-              <p className="text-xs font-bold text-primary">Coach snapshot</p>
+              <p className="section-label">Coach snapshot</p>
               <p className="mt-2 font-heading text-xl tracking-tight">{record.coach.headline}</p>
             </div>
           )}

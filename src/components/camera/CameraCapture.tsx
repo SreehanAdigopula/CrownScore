@@ -142,8 +142,8 @@ export function CameraCapture() {
     return (
       <div className="flex min-h-[100dvh] items-center justify-center p-5">
         <div className="glass-panel max-w-md rounded-[32px] p-7 text-center">
-          <ShieldX className="mx-auto size-8 text-[#b45309]" />
-          <h2 className="mt-5 font-heading text-2xl font-extrabold tracking-tight">
+          <ShieldX className="mx-auto size-8 text-caution" />
+          <h2 className="mt-5 font-heading text-2xl tracking-tight">
             {state === "denied" ? "Camera access is blocked" : "Camera is not available"}
           </h2>
           <p className="mt-3 text-sm leading-6 text-muted-foreground">
@@ -204,7 +204,7 @@ export function CameraCapture() {
         <div className="max-w-[58%] rounded-full border border-white/20 bg-zinc-950/55 px-3 py-2 text-[11px] font-bold leading-snug text-white backdrop-blur-md sm:max-w-none sm:text-xs">
           Align the crown inside the guide
         </div>
-        <div className="flex shrink-0 items-center gap-2 rounded-full border border-accent/30 bg-zinc-950/55 px-3 py-2 text-[11px] font-bold text-[#8ecdb8] backdrop-blur-md sm:text-xs">
+        <div className="flex shrink-0 items-center gap-2 rounded-full border border-teal-400/35 bg-zinc-950/55 px-3 py-2 text-[11px] font-bold text-teal-200 backdrop-blur-md sm:text-xs">
           <Check className="size-3" />
           Ready
         </div>

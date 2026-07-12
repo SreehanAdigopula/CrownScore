@@ -14,23 +14,25 @@ export default function HistoryPage() {
     <AppShell title="History">
       <div className="mx-auto max-w-5xl p-4 lg:p-10">
         <div className="mb-8">
-          <h1 className="font-heading text-3xl font-extrabold tracking-tight">Check-in history</h1>
-          <p className="mt-2 text-sm text-muted-foreground">Your authenticated check-ins stay available across devices.</p>
+          <h2 className="font-heading text-3xl tracking-tight">Check-in history</h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Authenticated check-ins stay available across devices.
+          </p>
         </div>
         {!ready ? (
           <div className="space-y-3">
-            <Skeleton className="h-20 rounded-[28px]" />
-            <Skeleton className="h-20 rounded-[28px]" />
-            <Skeleton className="h-20 rounded-[28px]" />
+            <Skeleton className="h-20 rounded-[24px]" />
+            <Skeleton className="h-20 rounded-[24px]" />
+            <Skeleton className="h-20 rounded-[24px]" />
           </div>
         ) : records.length === 0 ? (
-          <section className="neu-surface-lg rounded-[32px] p-8 text-center sm:p-12">
-            <div className="neu-inset mx-auto grid size-16 place-items-center rounded-[24px] text-primary">
-              <ImageIcon className="size-7" />
+          <section className="empty-state">
+            <div className="mx-auto grid size-14 place-items-center rounded-2xl text-primary neu-inset">
+              <ImageIcon className="size-6" />
             </div>
-            <h2 className="mt-6 font-heading text-2xl font-extrabold tracking-tight">No saved photos yet</h2>
+            <h2 className="mt-6 font-heading text-2xl tracking-tight">No saved photos yet</h2>
             <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-muted-foreground">
-              Your first usable check-in will save a non-diagnostic visible-health result.
+              Your first usable check-in will save a non-diagnostic visible-health result here.
             </p>
             <Link
               href="/check-in/capture"
@@ -41,16 +43,16 @@ export default function HistoryPage() {
             </Link>
           </section>
         ) : (
-          <div className="overflow-hidden rounded-[32px] neu-surface">
+          <div className="divide-y divide-border/70 overflow-hidden rounded-[28px] border border-border/70 bg-card/80">
             {[...records].reverse().map((record) => {
               const point = record.analysis;
               return (
                 <Link
                   href={`/history/${point.id}`}
                   key={point.id}
-                  className="grid grid-cols-[auto_1fr_auto_auto] items-center gap-4 px-5 py-5 transition hover:bg-muted/70 neu-focus"
+                  className="grid grid-cols-[auto_1fr_auto_auto] items-center gap-4 px-5 py-4 transition hover:bg-muted/50 neu-focus"
                 >
-                  <div className="neu-inset grid size-14 shrink-0 place-items-center overflow-hidden rounded-[22px] text-muted-foreground">
+                  <div className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-2xl bg-muted text-muted-foreground">
                     {record.preview ? (
                       <img src={record.preview} alt="" className="size-full object-cover" />
                     ) : (
@@ -58,11 +60,15 @@ export default function HistoryPage() {
                     )}
                   </div>
                   <div className="min-w-0">
-                    <p className="font-heading font-extrabold tracking-tight">
+                    <p className="font-heading tracking-tight">
                       {point.treatmentWeek === 0 ? "First check-in" : `Week ${point.treatmentWeek}`}
                     </p>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      {new Date(point.capturedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                      {new Date(point.capturedAt).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })}
                     </p>
                   </div>
                   <div className="text-right">

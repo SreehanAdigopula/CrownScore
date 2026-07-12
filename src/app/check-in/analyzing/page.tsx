@@ -104,7 +104,7 @@ export default function AnalyzingPage() {
               {!error ? (
                 <Cpu className="size-6 text-primary" />
               ) : (
-                <span className="font-mono text-lg font-semibold text-[#b42318]">!</span>
+                <span className="font-mono text-lg font-semibold text-destructive">!</span>
               )}
               <span className="mt-2 font-mono text-sm font-semibold">{error ? "Error" : `${progress}%`}</span>
             </div>
@@ -119,7 +119,7 @@ export default function AnalyzingPage() {
           </p>
           {error ? (
             <div className="mt-8 space-y-4">
-              <div className="rounded-[28px] p-4 text-sm text-[#b42318] neu-inset">{error}</div>
+              <div className="rounded-[28px] p-4 text-sm text-destructive neu-inset">{error}</div>
               <div className="flex flex-wrap gap-3">
                 <Button asChild className="flex-1">
                   <Link href="/check-in/capture">Retake photo</Link>

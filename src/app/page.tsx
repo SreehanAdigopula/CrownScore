@@ -7,48 +7,40 @@ import {
   Crown,
   LockKeyhole,
   ShieldCheck,
-  Sparkles,
 } from "lucide-react";
-import BlurText from "@/components/BlurText";
 import { ScoreOrb } from "@/components/brand/ScoreOrb";
 
 const steps = [
   {
     icon: Camera,
     title: "Capture with a guide",
-    copy: "A fixed frame keeps angle, distance, and lighting consistent enough to compare over time.",
+    copy: "A fixed oval keeps angle, distance, and light consistent enough to compare week to week.",
   },
   {
     icon: Cpu,
     title: "Score on your device",
-    copy: "YOLOv8n runs in the browser. Detected visible concerns become a 0–100 score with quality checks.",
+    copy: "YOLOv8n runs in the browser. Visible concerns become a 0–100 score with quality checks.",
   },
   {
     icon: ChartNoAxesCombined,
     title: "Track what changed",
-    copy: "Dashboard, history, and coach summaries fill only after real check-ins — never fake starter data.",
+    copy: "Dashboard, history, and coach fill only after real check-ins — never fake starter data.",
   },
 ] as const;
 
 const depth = [
   {
-    title: "Vision stays on your phone",
-    copy: "ONNX Runtime Web + YOLOv8n inference runs locally. Photos never need a cloud vision API.",
+    title: "Vision stays local",
+    copy: "ONNX Runtime Web + YOLOv8n inference runs on-device. Photos never need a cloud vision API.",
   },
   {
     title: "Scores you can explain",
     copy: "Class-aware NMS, gray-hair zero weight, and capped density classes keep every number traceable.",
   },
   {
-    title: "Safety rules come first",
+    title: "Safety before the coach",
     copy: "Fixed rules review symptoms and image quality. The coach explains results — it cannot rewrite them.",
   },
-] as const;
-
-const signals = [
-  { value: "0–100", label: "visible-health score" },
-  { value: "On-device", label: "photo analysis" },
-  { value: "No upload", label: "raw captures kept local" },
 ] as const;
 
 export default function Home() {
@@ -61,53 +53,47 @@ export default function Home() {
         Skip to content
       </a>
       <div className="atmosphere-grain fixed inset-0 z-0" aria-hidden />
-      <div className="strand-pattern fixed inset-0 z-0 opacity-60" aria-hidden />
+      <div className="strand-pattern fixed inset-0 z-0 opacity-50" aria-hidden />
 
-      <nav className="relative z-20 mx-auto flex h-20 max-w-7xl items-center justify-between px-5">
+      <nav className="relative z-20 mx-auto flex h-16 max-w-7xl items-center justify-between px-5 sm:h-20">
         <Link
           href="/"
-          className="flex items-center gap-3 rounded-2xl font-heading text-xl tracking-tight neu-focus"
+          className="flex items-center gap-2.5 rounded-2xl font-heading text-lg tracking-tight neu-focus sm:gap-3 sm:text-xl"
         >
-          <span className="brand-mark size-11">
-            <Crown className="size-5" />
+          <span className="brand-mark size-9 sm:size-11">
+            <Crown className="size-4 sm:size-5" />
           </span>
           CrownScore
         </Link>
         <div className="flex items-center gap-2">
           <Link
-            href="/dashboard"
+            href="/auth/sign-in"
             className="hidden px-3 py-2 text-sm font-bold text-muted-foreground transition hover:text-foreground sm:block"
           >
-            Dashboard
+            Sign in
           </Link>
           <Link
             href="/auth/sign-up"
-            className="rounded-2xl px-4 py-3 text-sm font-extrabold text-primary-foreground gradient-primary transition hover:-translate-y-0.5 neu-focus"
+            className="rounded-2xl px-4 py-2.5 text-sm font-extrabold text-primary-foreground gradient-primary transition hover:-translate-y-0.5 neu-focus"
           >
             Get started
           </Link>
         </div>
       </nav>
 
-      <section className="relative z-10 mx-auto grid min-h-[calc(100dvh-5rem)] max-w-7xl items-center gap-10 px-5 pb-16 pt-4 md:grid-cols-[1.08fr_0.92fr] md:gap-6 md:pb-20">
-        <div>
-          <p className="reveal-up section-label">Scalp & hair progress</p>
-          <h1 className="reveal-up reveal-delay-1 mt-4 font-heading text-[clamp(2.75rem,8vw,5.5rem)] leading-[0.95] tracking-tight">
-            Track your crown,{" "}
-            <span className="gradient-text">one frame at a time.</span>
+      {/* Brand-first hero: brand, one headline, one sentence, CTAs, dominant orb */}
+      <section className="relative z-10 mx-auto grid min-h-[calc(100dvh-4rem)] max-w-7xl items-center gap-8 px-5 pb-16 pt-2 sm:min-h-[calc(100dvh-5rem)] md:grid-cols-[0.95fr_1.05fr] md:gap-4 md:pb-20">
+        <div className="relative z-10 order-2 md:order-1">
+          <h1 className="font-heading text-[clamp(3.5rem,12vw,7rem)] leading-[0.88] tracking-tight text-foreground">
+            CrownScore
           </h1>
-          <BlurText
-            text="Guided photos scored on-device. Educational progress — never a diagnosis."
-            delay={55}
-            animateBy="words"
-            direction="top"
-            className="reveal-up reveal-delay-2 mt-6 max-w-[22ch] text-lg leading-snug text-muted-foreground sm:text-xl"
-            as="p"
-          />
-          <p className="reveal-up reveal-delay-3 mt-5 max-w-md text-sm leading-7 text-muted-foreground">
-            CrownScore measures possible visible hair and scalp concerns from consistent crown photos. Your dashboard stays empty until a real check-in lands.
+          <p className="mt-5 max-w-[16ch] font-heading text-xl leading-tight tracking-tight text-foreground/90 sm:text-2xl lg:text-3xl">
+            One consistent photo. A careful visible-health score.
           </p>
-          <div className="reveal-up reveal-delay-4 mt-8 flex flex-wrap gap-3">
+          <p className="mt-5 max-w-sm text-sm leading-7 text-muted-foreground sm:text-base">
+            Track possible visible hair and scalp concerns over time. Educational progress tool — not a diagnosis.
+          </p>
+          <div className="mt-8 flex flex-wrap gap-3">
             <Link
               href="/auth/sign-up"
               className="inline-flex min-h-12 items-center gap-2 rounded-2xl px-5 font-extrabold text-primary-foreground gradient-primary transition hover:-translate-y-0.5 neu-focus"
@@ -116,43 +102,40 @@ export default function Home() {
               <ArrowRight className="size-4" />
             </Link>
             <Link
-              href="/dashboard"
-              className="inline-flex min-h-12 items-center rounded-2xl border border-border bg-card px-5 font-extrabold text-foreground transition hover:border-primary/40 neu-focus"
+              href="/auth/sign-in"
+              className="inline-flex min-h-12 items-center rounded-2xl border border-border bg-card/80 px-5 font-extrabold text-foreground transition hover:border-primary/40 neu-focus"
             >
-              Open dashboard
+              Sign in
             </Link>
           </div>
-          <dl className="reveal-up reveal-delay-4 mt-10 grid max-w-lg grid-cols-3 gap-4 border-t border-border/70 pt-8">
-            {signals.map((signal) => (
-              <div key={signal.label}>
-                <dt className="font-mono text-lg font-semibold text-primary sm:text-xl">{signal.value}</dt>
-                <dd className="mt-1 text-[11px] font-bold leading-4 text-muted-foreground">{signal.label}</dd>
-              </div>
-            ))}
-          </dl>
         </div>
 
-        <div className="reveal-up reveal-delay-2 relative flex min-h-[360px] items-center justify-center md:min-h-[520px]">
+        <div className="relative order-1 flex min-h-[280px] items-center justify-center md:order-2 md:min-h-[520px]">
           <div className="scan-field absolute inset-0" aria-hidden />
-          <div className="follicle-glow absolute inset-[6%] rounded-full blur-3xl" aria-hidden />
+          <div className="follicle-glow absolute inset-[4%] rounded-full blur-3xl" aria-hidden />
+          <div className="absolute inset-x-[18%] top-[12%] h-px overflow-hidden md:inset-x-[22%]" aria-hidden>
+            <div className="scan-sweep-line h-24 w-full bg-gradient-to-b from-transparent via-accent/40 to-transparent" />
+          </div>
           <ScoreOrb size="xl" label="Waiting for first photo" />
         </div>
       </section>
 
       <section className="relative z-10 mx-auto max-w-7xl px-5 py-20">
-        <p className="section-label">How it works</p>
+        <p className="section-label">The loop</p>
         <h2 className="mt-3 max-w-xl font-heading text-3xl tracking-tight sm:text-4xl">
           A focused check-in that only fills with your photos.
         </h2>
-        <div className="mt-12 grid gap-6 md:grid-cols-3">
-          {steps.map((step) => (
-            <article
-              key={step.title}
-              className="neu-surface neu-lift rounded-[28px] p-6"
-            >
-              <span className="grid size-11 place-items-center rounded-2xl text-primary neu-inset">
-                <step.icon className="size-5" />
-              </span>
+        <div className="mt-12 grid gap-10 md:grid-cols-3 md:gap-8">
+          {steps.map((step, index) => (
+            <article key={step.title} className="relative">
+              <div className="flex items-center gap-3">
+                <span className="grid size-11 place-items-center rounded-2xl text-primary neu-inset">
+                  <step.icon className="size-5" />
+                </span>
+                <span className="font-mono text-xs font-semibold text-muted-foreground">
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+              </div>
               <h3 className="mt-5 font-heading text-xl tracking-tight">{step.title}</h3>
               <p className="mt-2 text-sm leading-6 text-muted-foreground">{step.copy}</p>
             </article>
@@ -165,25 +148,20 @@ export default function Home() {
           <div>
             <p className="section-label">Under the hood</p>
             <h2 className="mt-3 font-heading text-3xl tracking-tight sm:text-4xl">
-              Built for consistent scalp tracking.
+              Built like a product, not a prompt wrapper.
             </h2>
             <p className="mt-4 max-w-md text-sm leading-6 text-muted-foreground">
-              Vision model, scoring math, and a coach that cannot override safety — all working together behind one guided photo.
+              Vision model, scoring math, and a coach that cannot override safety — visible in the product, not buried in a README.
             </p>
           </div>
-          <div className="space-y-0 rounded-[28px] border border-border/80 bg-card/60 backdrop-blur-sm">
+          <div className="space-y-0">
             {depth.map((item, index) => (
               <div
                 key={item.title}
-                className={`flex gap-4 p-5 ${index > 0 ? "border-t border-border/70" : ""}`}
+                className={`border-t border-border/80 py-5 ${index === depth.length - 1 ? "border-b" : ""}`}
               >
-                <span className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-full bg-accent/12 text-accent">
-                  <Sparkles className="size-3.5" />
-                </span>
-                <div>
-                  <h3 className="font-heading text-lg tracking-tight">{item.title}</h3>
-                  <p className="mt-1.5 max-w-xl text-sm leading-6 text-muted-foreground">{item.copy}</p>
-                </div>
+                <h3 className="font-heading text-xl tracking-tight">{item.title}</h3>
+                <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">{item.copy}</p>
               </div>
             ))}
           </div>
@@ -191,7 +169,7 @@ export default function Home() {
       </section>
 
       <section className="relative z-10 mx-auto max-w-7xl px-5 py-16">
-        <div className="flex flex-col gap-6 rounded-[32px] border border-accent/20 bg-accent/[0.04] p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8">
+        <div className="flex flex-col gap-6 border-y border-border/70 py-8 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex gap-4">
             <span className="grid size-12 shrink-0 place-items-center rounded-2xl text-accent neu-inset">
               <ShieldCheck className="size-5" />
@@ -200,7 +178,7 @@ export default function Home() {
               <h2 className="font-heading text-2xl tracking-tight">Careful by design</h2>
               <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
                 CrownScore reports possible visible concerns. It does not diagnose, prescribe, or claim clinical accuracy.
-                Account data and derived results sync through Neon. Raw photos are not uploaded or retained.
+                Derived results sync through Neon. Raw photos are not uploaded or retained.
               </p>
             </div>
           </div>
@@ -214,8 +192,8 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="relative z-10 mx-auto max-w-7xl px-5 pb-24 pt-8">
-        <div className="rounded-[36px] neu-surface-lg px-6 py-14 text-center sm:px-12">
+      <section className="relative z-10 mx-auto max-w-7xl px-5 pb-24 pt-10">
+        <div className="text-center">
           <h2 className="font-heading text-3xl tracking-tight sm:text-5xl">Ready for your first photo?</h2>
           <p className="mx-auto mt-4 max-w-md text-sm leading-6 text-muted-foreground">
             Onboarding takes under a minute. Your dashboard stays empty until a usable check-in lands.
@@ -233,11 +211,11 @@ export default function Home() {
       <footer className="relative z-10 mx-auto flex max-w-7xl flex-col gap-3 border-t border-border/60 px-5 py-8 text-xs leading-5 text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
         <p>CrownScore is an educational progress tool, not a medical or diagnostic product.</p>
         <div className="flex gap-4">
+          <Link href="/auth/sign-in" className="font-bold text-foreground hover:text-primary">
+            Sign in
+          </Link>
           <Link href="/settings" className="font-bold text-foreground hover:text-primary">
             Settings
-          </Link>
-          <Link href="/dashboard" className="font-bold text-foreground hover:text-primary">
-            Dashboard
           </Link>
         </div>
       </footer>

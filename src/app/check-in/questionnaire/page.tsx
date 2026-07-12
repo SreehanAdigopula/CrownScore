@@ -51,7 +51,7 @@ export default function QuestionnairePage() {
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               {[[irritation, setIrritation, "Irritation"], [pain, setPain, "Scalp pain"]].map(([value, setter, label]) => (
-                <button type="button" aria-pressed={Boolean(value)} key={String(label)} onClick={() => (setter as (next: boolean) => void)(!value)} className={`min-h-14 rounded-2xl p-4 text-left text-sm font-bold transition neu-focus ${value ? "neu-inset text-[#b45309]" : "neu-surface text-foreground"}`}>
+                <button type="button" aria-pressed={Boolean(value)} key={String(label)} onClick={() => (setter as (next: boolean) => void)(!value)} className={`min-h-14 rounded-2xl p-4 text-left text-sm font-bold transition neu-focus ${value ? "neu-inset text-caution" : "neu-surface text-foreground"}`}>
                   {String(label)}
                   <span className="float-right text-xs text-muted-foreground">{value ? "Yes" : "No"}</span>
                 </button>

@@ -64,7 +64,7 @@
   --secondary: #d5ddd9;
   --secondary-foreground: #111916;
   --muted: #d8e0dc;
-  --muted-foreground: #5a6963;
+  --muted-foreground: #4a5953;
   --accent: #1a7a6e;
   --accent-foreground: #f2faf8;
   --destructive: #a83232;
@@ -267,8 +267,7 @@
     background: radial-gradient(circle, var(--glow-primary) 0%, var(--glow-accent) 42%, transparent 70%);
   }
   .reveal-up {
-    opacity: 0;
-    animation: reveal-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    animation: reveal-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
   .reveal-delay-1 { animation-delay: 0.07s; }
   .reveal-delay-2 { animation-delay: 0.14s; }

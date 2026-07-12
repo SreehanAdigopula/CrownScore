@@ -39,7 +39,7 @@ export default function ResultPage() {
           <div className="flex flex-col items-center gap-10 lg:flex-row lg:items-center lg:justify-between">
             <div className="reveal-up max-w-md text-center lg:text-left">
               <div
-                className={`inline-flex items-center gap-2 text-sm font-bold ${insufficient ? "text-[#b45309]" : "text-[#0f766e]"}`}
+                className={`inline-flex items-center gap-2 text-sm font-bold ${insufficient ? "text-caution" : "text-success"}`}
               >
                 {insufficient ? <TriangleAlert className="size-4" /> : <Check className="size-4" />}
                 {insufficient ? "Retake needed" : "Analysis complete"}
@@ -72,7 +72,7 @@ export default function ResultPage() {
         </section>
 
         {analysis.quality.warnings.length > 0 && (
-          <section className="rounded-[32px] p-6 text-[#7a4b00] neu-inset">
+          <section className="caution-banner rounded-[28px] p-6">
             <h2 className="font-bold">Image-quality notes</h2>
             <ul className="mt-2 list-disc space-y-1 pl-5 text-sm">
               {analysis.quality.warnings.map((warning) => (
@@ -108,7 +108,7 @@ export default function ResultPage() {
         </section>
 
         {elevated && (
-          <section className="rounded-[32px] p-6 text-[#7a4b00] neu-inset">
+          <section className="caution-banner rounded-[28px] p-6">
             <div className="flex gap-3">
               <ShieldAlert className="size-5 shrink-0" />
               <div>
@@ -123,9 +123,9 @@ export default function ResultPage() {
           <article className="rounded-[32px] neu-surface p-6">
             <div className="flex items-center gap-2 text-sm font-bold text-muted-foreground">
               {elevated ? (
-                <ShieldAlert className="size-4 text-[#b45309]" />
+                <ShieldAlert className="size-4 text-caution" />
               ) : (
-                <ShieldCheck className="size-4 text-[#0f766e]" />
+                <ShieldCheck className="size-4 text-success" />
               )}
               Fixed review
             </div>
@@ -134,7 +134,7 @@ export default function ResultPage() {
             </p>
           </article>
           <article className="rounded-[32px] neu-surface p-6">
-            <p className="text-sm font-bold text-primary">Summary</p>
+            <p className="section-label">Summary</p>
             <h2 className="mt-4 font-heading text-2xl tracking-tight">{coach.headline}</h2>
             <p className="mt-3 text-sm leading-6 text-muted-foreground">{coach.summary}</p>
             <p className="mt-5 text-sm font-bold">{coach.nextStep}</p>
