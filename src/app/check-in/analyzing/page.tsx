@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
@@ -9,8 +9,8 @@ import { CAPTURE_KEY, QUESTIONNAIRE_KEY, RESULT_KEY, createThumbnail, getOnboard
 const stages = ["Checking image quality", "Finding visible concerns", "Removing duplicate detections", "Calculating visible-health score", "Preparing your summary"];
 
 export default function AnalyzingPage() {
-  const [active, setActive] = useState(0), [error, setError] = useState<string | null>(null); const router = useRouter();
-  useEffect(() => { let cancelled = false; const ticker = setInterval(() => setActive((current) => Math.min(current + 1, stages.length - 2)), 650);
+  const [active, setActive] = useState(0), [error, setError] = useState<string | null>(null); const router = useRouter(); const startedRef = useRef(false);
+  useEffect(() => { if (startedRef.current) return; startedRef.current = true; let cancelled = false; const ticker = setInterval(() => setActive((current) => Math.min(current + 1, stages.length - 2)), 650);
     const run = async () => { try {
       const questionnaire = JSON.parse(sessionStorage.getItem(QUESTIONNAIRE_KEY) ?? "{}"), capture = sessionStorage.getItem(CAPTURE_KEY), prefs = getOnboardingPrefs(), records = getStoredCheckIns();
       if (!capture) throw new Error("A photo is required for a visible-health score.");

@@ -5,7 +5,21 @@ import { loadCapture } from "@/features/check-ins/score-capture";
 
 const MODEL_URL = "/models/hair-health-detector.onnx", INPUT_SIZE = 640, CONFIDENCE_THRESHOLD = 0.2;
 let sessionPromise: Promise<import("onnxruntime-web").InferenceSession> | null = null;
-async function getSession() { if (!sessionPromise) sessionPromise = (async () => { const ort = await import("onnxruntime-web"); ort.env.wasm.wasmPaths = "/ort/"; return ort.InferenceSession.create(MODEL_URL, { executionProviders: ["wasm"], graphOptimizationLevel: "all" }); })(); return sessionPromise; }
+async function getSession() {
+  if (!sessionPromise) {
+    sessionPromise = (async () => {
+      try {
+        const ort = await import("onnxruntime-web");
+        ort.env.wasm.wasmPaths = "/ort/";
+        return ort.InferenceSession.create(MODEL_URL, { executionProviders: ["wasm"], graphOptimizationLevel: "all" });
+      } catch (error) {
+        sessionPromise = null;
+        throw error;
+      }
+    })();
+  }
+  return sessionPromise;
+}
 
 function inspectQuality(source: HTMLCanvasElement): Omit<ImageQualityInput, "subjectCoverage"> {
   const sample = document.createElement("canvas"); sample.width = 160; sample.height = 160;
@@ -23,7 +37,9 @@ function inspectQuality(source: HTMLCanvasElement): Omit<ImageQualityInput, "sub
 
 function nonMaximumSuppression(detections: HealthDetection[]) { const accepted: HealthDetection[] = []; for (const detection of detections.sort((a, b) => b.confidence - a.confidence)) { if (!accepted.some((item) => item.className === detection.className && intersectionOverUnion(item.box, detection.box) > 0.5)) accepted.push(detection); } return accepted.slice(0, 100); }
 
-export async function analyzeHealthCapture(dataUrl: string): Promise<{ detections: HealthDetection[]; quality: ImageQualityInput }> {
+let inferenceInFlight: ReturnType<typeof runInference> | null = null;
+
+async function runInference(dataUrl: string): Promise<{ detections: HealthDetection[]; quality: ImageQualityInput }> {
   const source = await loadCapture(dataUrl), qualityBase = inspectQuality(source), scale = Math.min(INPUT_SIZE / source.width, INPUT_SIZE / source.height);
   const resizedWidth = Math.round(source.width * scale), resizedHeight = Math.round(source.height * scale), padX = Math.round((INPUT_SIZE - resizedWidth) / 2 - 0.1), padY = Math.round((INPUT_SIZE - resizedHeight) / 2 - 0.1);
   const canvas = document.createElement("canvas"); canvas.width = INPUT_SIZE; canvas.height = INPUT_SIZE; const context = canvas.getContext("2d", { willReadFrequently: true }); if (!context) throw new Error("2D canvas context is unavailable.");
@@ -37,4 +53,10 @@ export async function analyzeHealthCapture(dataUrl: string): Promise<{ detection
     detections.push({ className: HEALTH_MODEL_CLASSES[bestClass] as HealthClass, confidence: Number(confidence.toFixed(4)), box: { x: x / source.width, y: y / source.height, width: Math.max(0.001, Math.min(source.width - x, width / scale) / source.width), height: Math.max(0.001, Math.min(source.height - y, height / scale) / source.height) } }); }
   const selected = nonMaximumSuppression(detections), subjectCoverage = Math.min(1, selected.reduce((maximum, item) => Math.max(maximum, item.box.width * item.box.height), 0));
   return { detections: selected, quality: { ...qualityBase, subjectCoverage: Number(subjectCoverage.toFixed(3)) } };
+}
+
+export async function analyzeHealthCapture(dataUrl: string): Promise<{ detections: HealthDetection[]; quality: ImageQualityInput }> {
+  if (inferenceInFlight) return inferenceInFlight;
+  inferenceInFlight = runInference(dataUrl).finally(() => { inferenceInFlight = null; });
+  return inferenceInFlight;
 }
