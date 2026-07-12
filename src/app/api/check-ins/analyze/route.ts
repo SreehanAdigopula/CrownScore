@@ -4,8 +4,14 @@ import { analyzeCheckIn } from "@/server/services/analysis-service";
 import type { ApiResponse } from "@/server/domain/types";
 
 export async function POST(request: Request) {
+  let body: unknown;
   try {
-    const data = await analyzeCheckIn(await request.json());
+    body = await request.json();
+  } catch {
+    return NextResponse.json<ApiResponse<never>>({ success: false, error: { code: "INVALID_JSON", message: "The request body is not valid JSON." } }, { status: 400 });
+  }
+  try {
+    const data = await analyzeCheckIn(body);
     return NextResponse.json<ApiResponse<typeof data>>({ success: true, data });
   } catch (error) {
     const validation = error instanceof ZodError;

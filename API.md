@@ -6,7 +6,7 @@ Responses use `{ success: true, data }` or `{ success: false, error: { code, mes
 | --- | --- | --- |
 | GET, POST | `/api/session` | Restore or verify the anonymous guest session |
 | GET, PATCH | `/api/preferences` | Read or validate preferences |
-| POST | `/api/check-ins/:id/analyze` | Run the deterministic analysis pipeline and coach fallback |
+| POST | `/api/check-ins/analyze` | Run the deterministic analysis pipeline and coach fallback |
 | POST | `/api/demo/seed` | Return an internal deterministic fixture |
 | POST | `/api/demo/reset` | Reset internal fixture data for the current user |
 | GET | `/api/health` | Runtime health and demo-mode status |

@@ -46,7 +46,7 @@ export default function AnalyzingPage() {
         const baseline = records[0]?.analysis.rawDensityRatio ?? fallbackBaseline;
         const rawDensityRatio = scored ? clampRatio(scored.rawDensityRatio) : getSimulatedDensityRatio(baseline, records.length);
 
-        const response = await fetch("/api/check-ins/crownscore/analyze", {
+        const response = await fetch("/api/check-ins/analyze", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
