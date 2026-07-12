@@ -83,17 +83,17 @@ export default function Home() {
 
       {/* Brand-first hero: brand, one headline, one sentence, CTAs, dominant orb */}
       <section className="relative z-10 mx-auto grid min-h-[calc(100dvh-4rem)] max-w-7xl items-center gap-8 px-5 pb-16 pt-2 sm:min-h-[calc(100dvh-5rem)] md:grid-cols-[0.95fr_1.05fr] md:gap-4 md:pb-20">
-        <div className="relative z-10 order-2 md:order-1">
-          <h1 className="font-heading text-[clamp(3.5rem,12vw,7rem)] leading-[0.88] tracking-tight text-foreground">
+        <div className="relative z-10 order-2 text-center md:order-1 md:text-left">
+          <h1 className="font-heading text-[clamp(3.25rem,14vw,7rem)] leading-[0.88] tracking-tight text-foreground">
             CrownScore
           </h1>
-          <p className="mt-5 max-w-[16ch] font-heading text-xl leading-tight tracking-tight text-foreground/90 sm:text-2xl lg:text-3xl">
+          <p className="mx-auto mt-5 max-w-[16ch] font-heading text-xl leading-tight tracking-tight text-foreground/90 sm:text-2xl md:mx-0 lg:text-3xl">
             One consistent photo. A careful visible-health score.
           </p>
-          <p className="mt-5 max-w-sm text-sm leading-7 text-muted-foreground sm:text-base">
+          <p className="mx-auto mt-5 max-w-sm text-sm leading-7 text-muted-foreground sm:text-base md:mx-0">
             Track possible visible hair and scalp concerns over time. Educational progress tool — not a diagnosis.
           </p>
-          <div className="mt-8 flex flex-wrap gap-3">
+          <div className="mt-8 flex flex-wrap justify-center gap-3 md:justify-start">
             <Link
               href="/auth/sign-up"
               className="inline-flex min-h-12 items-center gap-2 rounded-2xl px-5 font-extrabold text-primary-foreground gradient-primary transition hover:-translate-y-0.5 neu-focus"
@@ -110,13 +110,13 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="relative order-1 flex min-h-[280px] items-center justify-center md:order-2 md:min-h-[520px]">
+        <div className="relative order-1 flex min-h-[300px] items-center justify-center md:order-2 md:min-h-[520px]">
           <div className="scan-field absolute inset-0" aria-hidden />
           <div className="follicle-glow absolute inset-[4%] rounded-full blur-3xl" aria-hidden />
           <div className="absolute inset-x-[18%] top-[12%] h-px overflow-hidden md:inset-x-[22%]" aria-hidden>
             <div className="scan-sweep-line h-24 w-full bg-gradient-to-b from-transparent via-accent/40 to-transparent" />
           </div>
-          <ScoreOrb size="xl" label="Waiting for first photo" />
+          <ScoreOrb score={84} label="Example score" size="xl" />
         </div>
       </section>
 
