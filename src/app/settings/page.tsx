@@ -6,6 +6,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { applyCrownScoreTheme, getStoredCrownScoreTheme, persistCrownScoreTheme, type CrownScoreTheme } from "@/components/theme/ThemeController";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { fetchApiJson } from "@/lib/api-client";
 import { clearStoredCheckIns } from "@/lib/crownscore-client";
 
 const policies = [
@@ -60,10 +61,12 @@ export default function SettingsPage() {
               onClick={() => {
                 setTheme(nextTheme);
                 persistCrownScoreTheme(nextTheme);
-                void fetch("/api/preferences", {
+                void fetchApiJson("/api/preferences", {
                   method: "PATCH",
                   headers: { "Content-Type": "application/json" },
                   body: JSON.stringify({ theme: nextTheme }),
+                }).catch(() => {
+                  // Theme is already applied locally; cloud sync can retry later.
                 });
               }}
               className="flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-2xl border border-border bg-card px-4 text-sm font-bold transition hover:border-primary/40 hover:text-primary neu-focus"
@@ -128,13 +131,13 @@ export default function SettingsPage() {
               <DialogHeader><DialogTitle>Delete your CrownScore data?</DialogTitle><DialogDescription>This removes your cloud profile, derived results, and local cache. It cannot be undone.</DialogDescription></DialogHeader>
               <DialogFooter><Button variant="destructive" onClick={async () => {
                 setDeleteError(null);
-                const response = await fetch("/api/preferences", { method: "DELETE" });
-                if (!response.ok) {
+                try {
+                  await fetchApiJson("/api/preferences", { method: "DELETE" });
+                  clearStoredCheckIns();
+                  setDeleted(true);
+                } catch {
                   setDeleteError("Your data could not be deleted. Please retry.");
-                  return;
                 }
-                clearStoredCheckIns();
-                setDeleted(true);
               }}>Delete data</Button></DialogFooter>
             </DialogContent>
           </Dialog>

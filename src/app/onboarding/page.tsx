@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ApiClientError, fetchApiJson } from "@/lib/api-client";
 import { ONBOARDING_KEY } from "@/lib/crownscore-client";
 
 const rhythmOptions = ["Every week", "Every 2 weeks", "Every month", "I will decide"] as const;
@@ -50,17 +51,21 @@ export default function OnboardingPage() {
     setSaving(true);
     setSaveError(null);
     try {
-      const response = await fetch("/api/preferences", {
+      await fetchApiJson("/api/preferences", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...preferences, onboardingCompleted: true }),
       });
-      const result = await response.json();
-      if (!response.ok || !result.success) throw new Error(result.error?.message ?? "Preferences could not be saved.");
       localStorage.setItem(ONBOARDING_KEY, JSON.stringify(preferences));
       router.push("/dashboard");
     } catch (error) {
-      setSaveError(error instanceof Error ? error.message : "Preferences could not be saved.");
+      const message =
+        error instanceof ApiClientError
+          ? error.message
+          : error instanceof Error
+            ? error.message
+            : "Preferences could not be saved.";
+      setSaveError(message);
       setSaving(false);
     }
   };

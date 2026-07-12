@@ -4,6 +4,10 @@ export default auth.middleware({
   loginUrl: "/auth/sign-in",
 });
 
+// Protect page navigations only. API routes must NOT be matched here —
+// Neon Auth middleware redirects unauthenticated requests to the HTML
+// sign-in page (307 → <!DOCTYPE…>), and client fetch().json() then fails.
+// APIs already return structured JSON 401s via requireUser().
 export const config = {
   matcher: [
     "/dashboard",
@@ -20,11 +24,5 @@ export const config = {
     "/settings/:path*",
     "/onboarding",
     "/onboarding/:path*",
-    "/api/check-ins",
-    "/api/check-ins/:path*",
-    "/api/preferences",
-    "/api/preferences/:path*",
-    "/api/session",
-    "/api/session/:path*",
   ],
 };

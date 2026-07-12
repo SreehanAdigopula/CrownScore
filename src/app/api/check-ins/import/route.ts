@@ -62,9 +62,18 @@ const importSchema = z.object({
 });
 
 export async function POST(request: Request) {
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json(
+      { success: false, error: { code: "INVALID_JSON", message: "The request body is not valid JSON." } },
+      { status: 400 },
+    );
+  }
   try {
     const user = await requireUser();
-    const parsed = importSchema.safeParse(await request.json());
+    const parsed = importSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
         { success: false, error: { code: "INVALID_IMPORT", message: "Local data could not be imported." } },

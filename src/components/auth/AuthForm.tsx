@@ -1,17 +1,49 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { Crown, LockKeyhole } from "lucide-react";
-import { signInWithEmail, signUpWithEmail, type AuthActionState } from "@/app/auth/actions";
+import { authClient } from "@/lib/auth/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
+  const router = useRouter();
   const signingUp = mode === "sign-up";
-  const action = signingUp ? signUpWithEmail : signInWithEmail;
-  const [state, formAction, pending] = useActionState<AuthActionState, FormData>(action, null);
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function submit(formData: FormData) {
+    setPending(true);
+    setError(null);
+
+    const email = String(formData.get("email") ?? "").trim();
+    const password = String(formData.get("password") ?? "");
+    const name = String(formData.get("name") ?? "").trim();
+
+    if (!email || !password || (signingUp && name.length < 2)) {
+      setError(signingUp ? "Name, email, and password are required." : "Email and password are required.");
+      setPending(false);
+      return;
+    }
+
+    // Hit /api/auth/* (same-origin). Avoid page server actions — prerendered
+    // /auth/* routes return 405 on POST when served from the CDN cache.
+    const result = signingUp
+      ? await authClient.signUp.email({ email, password, name })
+      : await authClient.signIn.email({ email, password });
+
+    if (result.error) {
+      setError(result.error.message || "Authentication failed. Please try again.");
+      setPending(false);
+      return;
+    }
+
+    router.push(signingUp ? "/onboarding" : "/dashboard");
+    router.refresh();
+  }
 
   return (
     <main className="relative grid min-h-[100dvh] overflow-hidden lg:grid-cols-[1fr_1.05fr]">
@@ -55,7 +87,7 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
           <p className="mt-3 text-sm leading-6 text-muted-foreground">
             Neon Auth protects your account while Neon Postgres keeps your results available across devices.
           </p>
-          <form action={formAction} className="mt-8 space-y-5">
+          <form action={submit} className="mt-8 space-y-5">
             {signingUp && (
               <div className="space-y-2">
                 <Label htmlFor="name">Name</Label>
@@ -77,9 +109,9 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
                 minLength={8}
               />
             </div>
-            {state?.error && (
+            {error && (
               <p role="alert" className="rounded-2xl p-3 text-sm font-bold text-destructive neu-inset">
-                {state.error}
+                {error}
               </p>
             )}
             <Button type="submit" className="h-12 w-full" disabled={pending}>

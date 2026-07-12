@@ -111,8 +111,13 @@ export class GroqCoachProvider implements CoachProvider {
         }),
       });
       if (!response.ok) throw new Error(`Coach provider returned ${response.status}`);
+      const contentType = response.headers.get("content-type") ?? "";
+      if (!contentType.includes("application/json")) {
+        throw new Error(`Coach provider returned non-JSON (${response.status}).`);
+      }
       const body = (await response.json()) as { choices?: Array<{ message?: { content?: string } }> };
-      return { ...coachOutputSchema.parse(JSON.parse(body.choices?.[0]?.message?.content ?? "{}")), fallbackUsed: false };
+      const content = body.choices?.[0]?.message?.content ?? "{}";
+      return { ...coachOutputSchema.parse(JSON.parse(content)), fallbackUsed: false };
     } finally {
       clearTimeout(timeout);
     }

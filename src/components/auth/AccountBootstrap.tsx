@@ -2,8 +2,17 @@
 
 import { useEffect } from "react";
 import { authClient } from "@/lib/auth/client";
+import { fetchApiJson } from "@/lib/api-client";
 import { ONBOARDING_KEY } from "@/lib/crownscore-client";
 import { applyCrownScoreTheme, persistCrownScoreTheme } from "@/components/theme/ThemeController";
+
+type PreferenceProfile = {
+  treatment: string;
+  coachStyle: string;
+  startDate: string | null;
+  checkInFrequency: string;
+  theme?: string;
+};
 
 export function AccountBootstrap() {
   const { data: session } = authClient.useSession();
@@ -14,11 +23,9 @@ export function AccountBootstrap() {
     const migrationMarker = `crownscore-neon-migration-v1:${userId}`;
     if (localStorage.getItem(ONBOARDING_KEY) && !localStorage.getItem(migrationMarker)) return;
     let cancelled = false;
-    void fetch("/api/preferences", { cache: "no-store" })
-      .then(async (response) => {
-        const result = await response.json();
-        if (!response.ok || !result.success || cancelled) return;
-        const profile = result.data;
+    void fetchApiJson<PreferenceProfile>("/api/preferences", { cache: "no-store" })
+      .then((profile) => {
+        if (cancelled) return;
         localStorage.setItem(ONBOARDING_KEY, JSON.stringify({
           treatment: profile.treatment,
           coachStyle: profile.coachStyle,

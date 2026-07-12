@@ -51,3 +51,4 @@ next-env.d.ts
 /runs/
 /yolov8n.pt
 *.pyc
+certificates

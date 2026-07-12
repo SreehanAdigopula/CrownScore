@@ -28,9 +28,18 @@ export async function GET() {
 }
 
 export async function PATCH(request: Request) {
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json<ApiResponse<never>>(
+      { success: false, error: { code: "INVALID_JSON", message: "The request body is not valid JSON." } },
+      { status: 400 },
+    );
+  }
   try {
     const user = await requireUser();
-    const parsed = schema.safeParse(await request.json());
+    const parsed = schema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json<ApiResponse<never>>(
         { success: false, error: { code: "INVALID_PREFERENCES", message: "Preferences were invalid.", details: parsed.error.issues } },

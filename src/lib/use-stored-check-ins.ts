@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { ApiClientError, fetchApiJson } from "@/lib/api-client";
 import {
   CHECK_INS_KEY,
   ONBOARDING_KEY,
@@ -21,13 +22,11 @@ export function useStoredCheckIns() {
     const local = getStoredCheckIns();
     setRecords(local);
     try {
-      const sessionResponse = await fetch("/api/session", { cache: "no-store" });
-      const sessionResult = await sessionResponse.json();
-      if (!sessionResponse.ok || !sessionResult.success) throw new Error("Your session expired. Sign in again.");
-      const marker = `${MIGRATION_KEY}:${sessionResult.data.uid}`;
+      const session = await fetchApiJson<{ uid: string }>("/api/session", { cache: "no-store" });
+      const marker = `${MIGRATION_KEY}:${session.uid}`;
       if (!localStorage.getItem(marker)) {
         const hasLocalPreferences = localStorage.getItem(ONBOARDING_KEY) != null;
-        const importResponse = await fetch("/api/check-ins/import", {
+        await fetchApiJson("/api/check-ins/import", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -35,25 +34,25 @@ export function useStoredCheckIns() {
             ...(hasLocalPreferences ? { preferences: getOnboardingPrefs() } : {}),
           }),
         });
-        const importResult = await importResponse.json();
-        if (!importResponse.ok || !importResult.success) {
-          throw new Error(importResult.error?.message ?? "Local data could not be synced.");
-        }
         localStorage.setItem(marker, new Date().toISOString());
       }
 
-      const response = await fetch("/api/check-ins", { cache: "no-store" });
-      const result = await response.json();
-      if (!response.ok || !result.success) throw new Error(result.error?.message ?? "Check-ins could not be loaded.");
+      const cloudData = await fetchApiJson<StoredCheckIn[]>("/api/check-ins", { cache: "no-store" });
       const previews = new Map(local.map((record) => [record.analysis.id, record.preview]));
-      const cloudRecords = (result.data as StoredCheckIn[]).map((record) => ({
+      const cloudRecords = cloudData.map((record) => ({
         ...record,
         preview: previews.get(record.analysis.id) ?? null,
       }));
       localStorage.setItem(CHECK_INS_KEY, JSON.stringify(cloudRecords));
       setRecords(cloudRecords);
     } catch (syncError) {
-      setError(syncError instanceof Error ? syncError.message : "Cloud sync failed.");
+      setError(
+        syncError instanceof ApiClientError
+          ? syncError.message
+          : syncError instanceof Error
+            ? syncError.message
+            : "Cloud sync failed.",
+      );
     } finally {
       setReady(true);
     }

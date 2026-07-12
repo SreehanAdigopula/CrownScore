@@ -7,6 +7,7 @@ import { Check, Cpu } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
 import { analyzeHealthCapture } from "@/features/check-ins/hair-health-detector";
+import { ApiClientError, fetchApiJson } from "@/lib/api-client";
 import {
   CAPTURE_KEY,
   QUESTIONNAIRE_KEY,
@@ -16,6 +17,7 @@ import {
   getStoredCheckIns,
   getTreatmentWeek,
   saveStoredCheckIn,
+  type StoredCheckIn,
 } from "@/lib/crownscore-client";
 
 const stages = [
@@ -38,7 +40,12 @@ export default function AnalyzingPage() {
 
     const run = async () => {
       try {
-        const questionnaire = JSON.parse(sessionStorage.getItem(QUESTIONNAIRE_KEY) ?? "{}");
+        let questionnaire: Record<string, unknown> = {};
+        try {
+          questionnaire = JSON.parse(sessionStorage.getItem(QUESTIONNAIRE_KEY) ?? "{}") as Record<string, unknown>;
+        } catch {
+          throw new Error("Check-in answers were corrupted. Go back and answer the questions again.");
+        }
         const capture = sessionStorage.getItem(CAPTURE_KEY);
         const prefs = getOnboardingPrefs();
         const records = getStoredCheckIns();
@@ -50,7 +57,7 @@ export default function AnalyzingPage() {
         ]);
         if (cancelled) return;
 
-        const response = await fetch("/api/check-ins/analyze", {
+        const data = await fetchApiJson<Omit<StoredCheckIn, "preview">>("/api/check-ins/analyze", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -61,24 +68,30 @@ export default function AnalyzingPage() {
             questionnaire,
           }),
         });
-        const result = await response.json();
-        if (!response.ok || !result.success) throw new Error(result.error?.message ?? "Analysis failed");
         clearInterval(ticker);
         if (cancelled) return;
         setActive(stages.length - 1);
         await new Promise((resolve) => setTimeout(resolve, 300));
 
-        const record = { ...result.data, preview };
+        const record: StoredCheckIn = { ...data, preview };
         sessionStorage.setItem(RESULT_KEY, JSON.stringify(record));
         try {
           saveStoredCheckIn(record);
         } catch {
           // The server has already persisted the derived result; local cache is optional.
         }
-        router.replace(`/check-in/result/${result.data.analysis.id}`);
+        router.replace(`/check-in/result/${data.analysis.id}`);
       } catch (err) {
         clearInterval(ticker);
-        if (!cancelled) setError(err instanceof Error ? err.message : "Analysis could not finish.");
+        if (!cancelled) {
+          setError(
+            err instanceof ApiClientError
+              ? err.message
+              : err instanceof Error
+                ? err.message
+                : "Analysis could not finish.",
+          );
+        }
       }
     };
 
