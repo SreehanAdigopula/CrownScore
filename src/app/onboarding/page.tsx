@@ -38,7 +38,13 @@ export default function OnboardingPage() {
       return;
     }
 
-    localStorage.setItem(ONBOARDING_KEY, JSON.stringify({ treatment, startDate, rhythm, coachStyle }));
+    localStorage.setItem(ONBOARDING_KEY, JSON.stringify({
+      treatment,
+      startDate,
+      rhythm,
+      checkInFrequency: rhythm === "Every week" ? "WEEKLY" : rhythm === "Every 2 weeks" ? "BIWEEKLY" : rhythm === "Every month" ? "MONTHLY" : "MANUAL",
+      coachStyle,
+    }));
     router.push("/dashboard");
   };
 

@@ -7,6 +7,8 @@ export const QUESTIONNAIRE_KEY = "crownscore-questionnaire";
 export const GUEST_ID_KEY = "crownscore-guest-id";
 export const ONBOARDING_KEY = "crownscore-onboarding";
 
+export type CheckInFrequency = "WEEKLY" | "BIWEEKLY" | "MONTHLY" | "MANUAL";
+
 export type StoredCheckIn = {
   analysis: CheckInAnalysis;
   coach: CoachOutput;
@@ -25,9 +27,18 @@ export function getStoredCheckIns(): StoredCheckIn[] {
   }
 }
 
+function slimForStorage(record: StoredCheckIn): StoredCheckIn {
+  /* UI never renders raw detection boxes; dropping them keeps localStorage under quota. */
+  return {
+    ...record,
+    analysis: { ...record.analysis, detections: [] },
+  };
+}
+
 export function saveStoredCheckIn(record: StoredCheckIn) {
-  const existing = getStoredCheckIns().filter((item) => item.analysis.id !== record.analysis.id);
-  const next = [...existing, record].sort((a, b) => new Date(a.analysis.capturedAt).getTime() - new Date(b.analysis.capturedAt).getTime());
+  const slim = slimForStorage(record);
+  const existing = getStoredCheckIns().filter((item) => item.analysis.id !== slim.analysis.id);
+  const next = [...existing, slim].sort((a, b) => new Date(a.analysis.capturedAt).getTime() - new Date(b.analysis.capturedAt).getTime());
   /* localStorage quota is ~5MB; if a save fails, shed the oldest photo previews first and keep the
      analysis history intact rather than losing the whole check-in. */
   let attempt = [...next];
@@ -45,22 +56,63 @@ export function saveStoredCheckIn(record: StoredCheckIn) {
   return attempt;
 }
 
-export type OnboardingPrefs = { treatment: TreatmentType; coachStyle: CoachStyle; startDate: string | null };
+export type OnboardingPrefs = {
+  treatment: TreatmentType;
+  coachStyle: CoachStyle;
+  startDate: string | null;
+  checkInFrequency: CheckInFrequency;
+};
+
 const TREATMENTS: TreatmentType[] = ["MINOXIDIL", "FINASTERIDE", "GENERAL", "MONITORING"];
 const COACH_STYLES: CoachStyle[] = ["SUPPORTIVE", "DIRECT", "SCIENTIFIC", "MINIMAL"];
+const FREQUENCIES: CheckInFrequency[] = ["WEEKLY", "BIWEEKLY", "MONTHLY", "MANUAL"];
+
+const RHYTHM_TO_FREQUENCY: Record<string, CheckInFrequency> = {
+  "Every week": "WEEKLY",
+  "Every 2 weeks": "BIWEEKLY",
+  "Every month": "MONTHLY",
+  "I will decide": "MANUAL",
+  WEEKLY: "WEEKLY",
+  BIWEEKLY: "BIWEEKLY",
+  MONTHLY: "MONTHLY",
+  MANUAL: "MANUAL",
+};
 
 export function getOnboardingPrefs(): OnboardingPrefs {
-  const fallback: OnboardingPrefs = { treatment: "MINOXIDIL", coachStyle: "SUPPORTIVE", startDate: null };
+  const fallback: OnboardingPrefs = { treatment: "MINOXIDIL", coachStyle: "SUPPORTIVE", startDate: null, checkInFrequency: "WEEKLY" };
   if (typeof window === "undefined") return fallback;
   try {
-    const raw = JSON.parse(localStorage.getItem(ONBOARDING_KEY) ?? "{}") as { treatment?: string; coachStyle?: string; startDate?: string };
+    const raw = JSON.parse(localStorage.getItem(ONBOARDING_KEY) ?? "{}") as {
+      treatment?: string;
+      coachStyle?: string;
+      startDate?: string;
+      rhythm?: string;
+      checkInFrequency?: string;
+    };
     const treatment = TREATMENTS.find((item) => item === raw.treatment) ?? fallback.treatment;
     const coachStyle = COACH_STYLES.find((item) => item === raw.coachStyle?.toUpperCase()) ?? fallback.coachStyle;
     const startDate = raw.startDate && !Number.isNaN(new Date(raw.startDate).getTime()) ? raw.startDate : null;
-    return { treatment, coachStyle, startDate };
+    const fromRhythm = raw.rhythm ? RHYTHM_TO_FREQUENCY[raw.rhythm] : undefined;
+    const checkInFrequency =
+      FREQUENCIES.find((item) => item === raw.checkInFrequency) ?? fromRhythm ?? fallback.checkInFrequency;
+    return { treatment, coachStyle, startDate, checkInFrequency };
   } catch {
     return fallback;
   }
+}
+
+export function nextCheckInLabel(frequency: CheckInFrequency, lastCapturedAt?: string | null): string {
+  if (frequency === "MANUAL" || !lastCapturedAt) {
+    return frequency === "MANUAL" ? "Whenever you want another consistent photo" : "Keep the same angle and lighting for a cleaner comparison.";
+  }
+  const days = frequency === "WEEKLY" ? 7 : frequency === "BIWEEKLY" ? 14 : 30;
+  const due = new Date(lastCapturedAt);
+  due.setDate(due.getDate() + days);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  due.setHours(0, 0, 0, 0);
+  if (due.getTime() <= today.getTime()) return "Due now — same angle and lighting help comparisons.";
+  return `Suggested around ${due.toLocaleDateString("en-US", { month: "short", day: "numeric" })}.`;
 }
 
 /* Full captures are ~100-200KB each; history thumbnails at 320px keep dozens of check-ins
@@ -83,6 +135,8 @@ export async function createThumbnail(dataUrl: string, maxSize = 320): Promise<s
 
 export function clearStoredCheckIns() {
   localStorage.removeItem(CHECK_INS_KEY);
+  localStorage.removeItem(ONBOARDING_KEY);
+  localStorage.removeItem(GUEST_ID_KEY);
   sessionStorage.removeItem(RESULT_KEY);
   sessionStorage.removeItem(CAPTURE_KEY);
   sessionStorage.removeItem(QUESTIONNAIRE_KEY);
@@ -105,4 +159,15 @@ export function getTreatmentWeek(firstCapturedAt?: string | null) {
   if (!firstCapturedAt) return 0;
   const days = Math.max(0, Date.now() - new Date(firstCapturedAt).getTime()) / 86_400_000;
   return Math.floor(days / 7);
+}
+
+export function parseStoredCheckIn(raw: string | null): StoredCheckIn | null {
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw) as StoredCheckIn;
+    if (!parsed?.analysis?.id || !parsed?.coach) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
 }

@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
+import { requireApiAuth } from "@/server/firebase/api-auth";
 import { analyzeCheckIn } from "@/server/services/analysis-service";
 import type { ApiResponse } from "@/server/domain/types";
 
 export async function POST(request: Request) {
+  const unauthorized = await requireApiAuth(request);
+  if (unauthorized) return unauthorized;
+
   let body: unknown;
   try {
     body = await request.json();

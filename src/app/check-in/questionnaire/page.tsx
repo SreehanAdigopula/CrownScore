@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
-import { QUESTIONNAIRE_KEY } from "@/lib/crownscore-client";
+import { QUESTIONNAIRE_KEY, CAPTURE_KEY } from "@/lib/crownscore-client";
 
 export default function QuestionnairePage() {
   const router = useRouter();
@@ -18,6 +18,10 @@ export default function QuestionnairePage() {
   const [notes, setNotes] = useState("");
 
   const submit = () => {
+    if (!sessionStorage.getItem(CAPTURE_KEY)) {
+      router.replace("/check-in/capture");
+      return;
+    }
     const trimmed = notes.trim().slice(0, 600);
     sessionStorage.setItem(QUESTIONNAIRE_KEY, JSON.stringify({ adherenceRate: adherence[0], shedding, irritation, scalpPain: pain, routineChanged: trimmed.length > 0, ...(trimmed ? { notes: trimmed } : {}) }));
     router.push("/check-in/analyzing");

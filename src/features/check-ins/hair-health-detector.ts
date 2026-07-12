@@ -14,11 +14,18 @@ function withTimeout<T>(promise: Promise<T>, ms: number, message: string): Promi
 }
 
 let sessionPromise: Promise<import("onnxruntime-web").InferenceSession> | null = null;
+let ortModulePromise: Promise<typeof import("onnxruntime-web")> | null = null;
+
+function loadOrt() {
+  if (!ortModulePromise) ortModulePromise = import("onnxruntime-web");
+  return ortModulePromise;
+}
+
 async function getSession() {
   if (!sessionPromise) {
     sessionPromise = (async () => {
       try {
-        const ort = await import("onnxruntime-web");
+        const ort = await loadOrt();
         ort.env.wasm.wasmPaths = "/ort/";
         return await withTimeout(
           ort.InferenceSession.create(MODEL_URL, { executionProviders: ["wasm"], graphOptimizationLevel: "all" }),
@@ -32,6 +39,13 @@ async function getSession() {
     })();
   }
   return sessionPromise;
+}
+
+/** Warm the ONNX session during capture/questionnaire so analyzing is not a cold start. */
+export function preloadHealthModel() {
+  void getSession().catch(() => {
+    /* Preload failures are retried on analyze. */
+  });
 }
 
 function inspectQuality(source: HTMLCanvasElement): Omit<ImageQualityInput, "subjectCoverage"> {
@@ -59,7 +73,8 @@ async function runInference(dataUrl: string): Promise<{ detections: HealthDetect
   context.fillStyle = "rgb(114,114,114)"; context.fillRect(0, 0, INPUT_SIZE, INPUT_SIZE); context.drawImage(source, padX, padY, resizedWidth, resizedHeight);
   const rgba = context.getImageData(0, 0, INPUT_SIZE, INPUT_SIZE).data, input = new Float32Array(3 * INPUT_SIZE * INPUT_SIZE), plane = INPUT_SIZE * INPUT_SIZE;
   for (let index = 0; index < plane; index += 1) { input[index] = rgba[index * 4] / 255; input[plane + index] = rgba[index * 4 + 1] / 255; input[plane * 2 + index] = rgba[index * 4 + 2] / 255; }
-  const ort = await import("onnxruntime-web"), session = await getSession(), output = (await withTimeout(
+  const [ort, session] = await Promise.all([loadOrt(), getSession()]);
+  const output = (await withTimeout(
     session.run({ [session.inputNames[0]]: new ort.Tensor("float32", input, [1, 3, INPUT_SIZE, INPUT_SIZE]) }),
     INFERENCE_TIMEOUT_MS,
     "Analysis timed out. Please try again."

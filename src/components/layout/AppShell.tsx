@@ -80,11 +80,12 @@ export function AppShell({ children, title }: { children: React.ReactNode; title
           <Link
             key={item.href}
             href={item.href}
-            className={cn(
-              "flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl text-[10px] font-bold text-muted-foreground neu-focus",
-              pathname.startsWith(item.href) && !item.primary && "text-primary",
-              item.primary && "gradient-primary shadow-[0_12px_30px_rgb(0,82,255,0.22)]"
-            )}
+              className={cn(
+                "flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl text-[10px] font-bold text-muted-foreground neu-focus",
+                !item.primary && pathname.startsWith(item.href) && "text-primary",
+                item.primary && pathname.startsWith("/check-in") && "ring-2 ring-primary/35",
+                item.primary && "gradient-primary shadow-[0_12px_30px_rgb(0,82,255,0.22)]"
+              )}
           >
             <item.icon className="size-5" />
             {item.label}
